@@ -47,7 +47,9 @@
         
         .input-row { display: flex; flex-direction: column; gap: 12px; margin-bottom: 12px; }
         .input-row input, .input-row select { width: 100%; padding: 15px; border: 1px solid var(--border); border-radius: 10px; font-size: 16px; box-sizing: border-box; background-color: white; }
-        .btn-submit { width: 100%; padding: 16px; background-color: var(--primary); color: white; border: none; border-radius: 10px; font-size: 18px; font-weight: bold; cursor: pointer; margin-top: 10px; }
+        
+        .btn-submit { width: 100%; padding: 16px; background-color: var(--primary); color: white; border: none; border-radius: 10px; font-size: 18px; font-weight: bold; cursor: pointer; }
+        .btn-cancel { background-color: #9ca3af; flex: 0.4; } /* 취소 버튼용 */
 
         .filter-section { display: flex; flex-direction: column; gap: 12px; margin-bottom: 20px; }
         .filter-section h3 { margin: 0; font-size: 18px; }
@@ -63,9 +65,12 @@
         .bg-income { background-color: var(--income); }
         .bg-expense { background-color: var(--expense); }
         .table-scroll { overflow-x: auto; width: 100%; }
-        table { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 450px; }
+        table { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 500px; }
         th, td { padding: 14px 10px; border-bottom: 1px solid var(--border); text-align: center; }
         th { background-color: #f9fafb; color: var(--text-muted); font-weight: 600; }
+        
+        .action-btns { display: flex; justify-content: center; gap: 5px; }
+        .edit-btn { padding: 6px 10px; background-color: #e5e7eb; color: var(--text-main); border-radius: 5px; border: none; font-weight: bold; cursor: pointer; }
         .delete-btn { padding: 6px 10px; background-color: #fee2e2; color: var(--expense); border-radius: 5px; border: none; font-weight: bold; cursor: pointer; }
 
         .summary { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; padding: 20px; background: #fff; border-radius: 12px; border: 1px solid var(--border); margin-top: 20px; }
@@ -79,7 +84,6 @@
         .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
         .cal-header { text-align: center; font-weight: bold; font-size: 13px; padding: 8px 0; background: #f9fafb; color: var(--text-muted); border-radius: 4px; }
         
-        /* 달력 일자 스타일 및 막대그래프 래퍼 */
         .cal-day { min-height: 60px; padding: 4px; border: 1px solid var(--border); border-radius: 6px; display: flex; flex-direction: column; background: #fff; cursor: pointer; transition: background-color 0.2s; }
         .cal-day:hover { background-color: #f3f4f6; }
         .cal-date { font-weight: bold; font-size: 12px; margin-bottom: 2px; color: var(--text-main); }
@@ -155,7 +159,10 @@
                 <input type="text" id="detailInput" placeholder="세부 내용 (예: 점심 식사)">
                 <input type="tel" id="amountInput" placeholder="금액 (숫자만 입력)" oninput="formatNumber(this)">
             </div>
-            <button class="btn-submit" onclick="addEntry()">내역 추가하기</button>
+            <div style="display: flex; gap: 10px; margin-top: 10px;">
+                <button id="submitBtn" class="btn-submit" onclick="addOrEditEntry()">내역 추가하기</button>
+                <button id="cancelBtn" class="btn-submit btn-cancel" style="display:none;" onclick="cancelEdit()">취소</button>
+            </div>
         </div>
 
         <div class="filter-section">
@@ -181,7 +188,7 @@
                 <div class="table-scroll">
                     <table>
                         <thead>
-                            <tr><th>날짜</th><th>항목</th><th>내용</th><th>금액</th><th>삭제</th></tr>
+                            <tr><th>날짜</th><th>항목</th><th>내용</th><th>금액</th><th>관리</th></tr>
                         </thead>
                         <tbody id="incomeTableBody"></tbody>
                     </table>
@@ -196,7 +203,7 @@
                 <div class="table-scroll">
                     <table>
                         <thead>
-                            <tr><th>날짜</th><th>항목</th><th>내용</th><th>금액</th><th>삭제</th></tr>
+                            <tr><th>날짜</th><th>항목</th><th>내용</th><th>금액</th><th>관리</th></tr>
                         </thead>
                         <tbody id="expenseTableBody"></tbody>
                     </table>
@@ -287,6 +294,7 @@
     
     let expenseChartInstance = null;
     let incomeChartInstance = null;
+    let editingEntryId = null; // 수정 중인 내역의 ID를 저장할 변수
 
     window.onload = function() {
         const today = new Date();
@@ -380,12 +388,18 @@
     function updateCategoryOptions() {
         const type = document.querySelector('input[name="type"]:checked').value;
         const select = document.getElementById('categorySelect');
+        const currentValue = select.value; // 수정 시 기존 선택값 유지용
+        
         select.innerHTML = '';
         categories[type].forEach(cat => {
             const option = document.createElement('option');
             option.value = cat; option.textContent = cat;
             select.appendChild(option);
         });
+        
+        if(categories[type].includes(currentValue)) {
+            select.value = currentValue;
+        }
     }
 
     function updateFixedCategoryOptions() {
@@ -458,41 +472,85 @@
         }
     }
 
-    function renderFixedTable() {
-        const tbody = document.getElementById('fixedTableBody');
-        tbody.innerHTML = '';
-        if(!fixedEntries || fixedEntries.length === 0) {
-            tbody.innerHTML = '<tr><td colspan="6">등록된 고정 자금이 없습니다.</td></tr>';
-            return;
-        }
-        fixedEntries.forEach(fe => {
-            const tr = document.createElement('tr');
-            tr.innerHTML = `
-                <td class="${fe.type==='income'?'txt-income':'txt-expense'}">${fe.type==='income'?'수입':'지출'}</td>
-                <td>매월 ${fe.day}일</td>
-                <td>${fe.category}</td>
-                <td>${fe.detail}</td>
-                <td style="font-weight:bold;">${fe.amount.toLocaleString()}원</td>
-                <td><button class="delete-btn" onclick="deleteFixedEntry(${fe.id})">X</button></td>
-            `;
-            tbody.appendChild(tr);
-        });
-    }
-
-    function addEntry() {
+    // ✨ 내역 추가 및 수정 통합 로직
+    function addOrEditEntry() {
         const type = document.querySelector('input[name="type"]:checked').value;
         const date = document.getElementById('dateInput').value;
         const category = document.getElementById('categorySelect').value;
         const detail = document.getElementById('detailInput').value;
         const amountStr = document.getElementById('amountInput').value.replace(/,/g, '');
         const amount = Number(amountStr);
+        
         if (!date || !amountStr) return alert("날짜와 금액을 입력해주세요.");
-        entries.push({ id: Date.now(), type, date, category, detail, amount });
+        
+        if (editingEntryId) {
+            // 수정 모드일 때
+            const index = entries.findIndex(e => e.id === editingEntryId);
+            if (index > -1) {
+                entries[index] = { ...entries[index], type, date, category, detail, amount };
+            }
+            alert("수정되었습니다.");
+            cancelEdit(); // 폼 초기화
+        } else {
+            // 새 내역 추가 모드일 때
+            entries.push({ id: Date.now(), type, date, category, detail, amount });
+            document.getElementById('detailInput').value = ''; 
+            document.getElementById('amountInput').value = '';
+        }
+        
         saveData();
-        document.getElementById('detailInput').value = ''; document.getElementById('amountInput').value = '';
+    }
+    
+    // ✨ 내역 수정을 위해 데이터를 폼으로 불러오는 로직
+    function editEntry(id) {
+        const entry = entries.find(e => e.id === id);
+        if (!entry) return;
+        
+        editingEntryId = id;
+        
+        // 라디오 버튼(수입/지출) 셋팅
+        document.querySelector(`input[name="type"][value="${entry.type}"]`).checked = true;
+        updateCategoryOptions(); // 카테고리 목록 갱신
+        
+        // 입력 필드 채우기
+        document.getElementById('dateInput').value = entry.date;
+        document.getElementById('categorySelect').value = entry.category;
+        document.getElementById('detailInput').value = entry.detail;
+        document.getElementById('amountInput').value = entry.amount.toLocaleString('ko-KR');
+        
+        // 버튼 텍스트 변경 및 취소 버튼 표시
+        const submitBtn = document.getElementById('submitBtn');
+        submitBtn.textContent = '내역 수정완료';
+        submitBtn.style.backgroundColor = '#10b981'; // 눈에 띄게 초록색으로 변경
+        document.getElementById('cancelBtn').style.display = 'block';
+        
+        // 사용자가 편하게 볼 수 있도록 화면 맨 위로 부드럽게 스크롤
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+    
+    // ✨ 수정 취소(폼 초기화) 로직
+    function cancelEdit() {
+        editingEntryId = null;
+        
+        // 버튼 원래대로 복구
+        const submitBtn = document.getElementById('submitBtn');
+        submitBtn.textContent = '내역 추가하기';
+        submitBtn.style.backgroundColor = 'var(--primary)';
+        document.getElementById('cancelBtn').style.display = 'none';
+        
+        // 입력 폼 비우기 (날짜는 그대로 유지)
+        document.getElementById('detailInput').value = ''; 
+        document.getElementById('amountInput').value = '';
+        document.querySelector('input[name="type"][value="expense"]').checked = true;
+        updateCategoryOptions();
     }
 
-    function deleteEntry(id) { if (confirm("삭제하시겠습니까?")) { entries = entries.filter(entry => entry.id !== id); saveData(); } }
+    function deleteEntry(id) { 
+        if (confirm("정말 이 내역을 삭제하시겠습니까?")) { 
+            entries = entries.filter(entry => entry.id !== id); 
+            saveData(); 
+        } 
+    }
 
     function renderTables() {
         const searchMonth = document.getElementById('searchMonth').value;
@@ -516,14 +574,17 @@
                 <td>${entry.category}</td>
                 <td style="text-align:left;">${entry.detail}</td>
                 <td style="font-weight:bold;">${entry.amount.toLocaleString()}</td>
-                <td><button class="delete-btn" onclick="deleteEntry(${entry.id})">X</button></td>
+                <td class="action-btns">
+                    <button class="edit-btn" onclick="editEntry(${entry.id})">✏️</button>
+                    <button class="delete-btn" onclick="deleteEntry(${entry.id})">X</button>
+                </td>
             `;
             if (entry.type === 'income') { incBody.appendChild(tr); totalInc += entry.amount; } 
             else { expBody.appendChild(tr); totalExp += entry.amount; }
         });
 
         if(incBody.innerHTML === '') incBody.innerHTML = '<tr><td colspan="5">내역 없음</td></tr>';
-        if(expBody.innerHTML === '') incBody.innerHTML = '<tr><td colspan="5">내역 없음</td></tr>';
+        if(expBody.innerHTML === '') expBody.innerHTML = '<tr><td colspan="5">내역 없음</td></tr>';
 
         document.getElementById('subTotalIncome').textContent = `${totalInc.toLocaleString()} 원`;
         document.getElementById('subTotalExpense').textContent = `${totalExp.toLocaleString()} 원`;
@@ -532,7 +593,6 @@
         document.getElementById('netTotal').textContent = (totalInc - totalExp).toLocaleString() + "원";
     }
 
-    // ✨ 클릭 시 날짜별 상세 금액을 보여주는 함수
     function showDaySummary(dateStr, inc, exp) {
         if (inc === 0 && exp === 0) {
             alert(`${dateStr}\n\n등록된 내역이 없습니다.`);
@@ -541,7 +601,6 @@
         alert(`${dateStr} 요약\n\n🔵 총 수입: ${inc.toLocaleString()}원\n🔴 총 지출: ${exp.toLocaleString()}원`);
     }
 
-    // ✨ 달력을 상대적 비율 막대그래프로 렌더링하는 로직
     function renderCalendar() {
         const targetMonth = document.getElementById('statsMonth').value;
         if (!targetMonth) return;
@@ -560,7 +619,6 @@
             html += `<div class="cal-day cal-empty"></div>`;
         }
 
-        // 1. 해당 월의 최대 수입, 최대 지출 금액 찾기 (비율 계산용)
         let maxInc = 0;
         let maxExp = 0;
         const dailyData = [];
@@ -581,7 +639,6 @@
             dailyData.push({ date: dateStr, dayNum: i, inc, exp });
         }
 
-        // 2. 달력 칸 그리기 (상대적 길이를 가진 막대그래프 포함)
         dailyData.forEach(data => {
             let barsHtml = '<div class="cal-bar-wrapper">';
             
