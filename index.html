@@ -55,7 +55,6 @@
         .filter-controls-row input { padding: 12px; border: 1px solid var(--border); border-radius: 8px; font-size: 16px; box-sizing: border-box; flex: 1; min-width: 140px; }
         #searchInput { background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="gray" viewBox="0 0 16 16"><path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0z"/></svg>'); background-repeat: no-repeat; background-position: 12px center; padding-left: 35px; }
 
-        /* 전월 대비 코멘트 박스 스타일 */
         .comment-box { background-color: #f0fdf4; border: 1px solid #bbf7d0; padding: 15px; border-radius: 12px; margin-bottom: 20px; font-size: 15px; font-weight: 500; text-align: center; }
         .comment-box.warn { background-color: #fef2f2; border: 1px solid #fca5a5; }
 
@@ -79,11 +78,17 @@
         .calendar-container h4 { margin: 0 0 15px 0; text-align: center; font-size: 18px; color: var(--text-main); }
         .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
         .cal-header { text-align: center; font-weight: bold; font-size: 13px; padding: 8px 0; background: #f9fafb; color: var(--text-muted); border-radius: 4px; }
-        .cal-day { min-height: 60px; padding: 4px; border: 1px solid var(--border); border-radius: 6px; display: flex; flex-direction: column; background: #fff; }
+        
+        /* 달력 일자 스타일 및 막대그래프 래퍼 */
+        .cal-day { min-height: 60px; padding: 4px; border: 1px solid var(--border); border-radius: 6px; display: flex; flex-direction: column; background: #fff; cursor: pointer; transition: background-color 0.2s; }
+        .cal-day:hover { background-color: #f3f4f6; }
         .cal-date { font-weight: bold; font-size: 12px; margin-bottom: 2px; color: var(--text-main); }
-        .cal-inc { color: var(--income); font-size: 10px; font-weight: bold; text-align: right; word-break: break-all; margin-top: auto; }
-        .cal-exp { color: var(--expense); font-size: 10px; font-weight: bold; text-align: right; word-break: break-all; }
-        .cal-empty { background: transparent; border: none; }
+        .cal-empty { background: transparent; border: none; cursor: default; }
+        .cal-empty:hover { background: transparent; }
+        
+        .cal-bar-wrapper { margin-top: auto; width: 100%; display: flex; flex-direction: column; gap: 2px; }
+        .cal-bar-inc { height: 6px; background-color: var(--income); border-radius: 3px; min-width: 2px; }
+        .cal-bar-exp { height: 6px; background-color: var(--expense); border-radius: 3px; min-width: 2px; }
 
         .chart-container { background: #fff; padding: 20px; border-radius: 12px; border: 1px solid var(--border); margin-bottom: 20px; }
         .chart-container h4 { margin: 0 0 15px 0; text-align: center; font-size: 18px; color: var(--text-main); }
@@ -96,7 +101,6 @@
         .btn-action { font-size: 16px; background: none; border: none; cursor: pointer; }
         .btn-add { background-color: var(--text-main); color: white; border: none; border-radius: 8px; padding: 8px 12px; font-size: 13px; cursor: pointer; }
 
-        /* 고정 내역 입력 폼 및 테이블 폼 스타일 */
         .fixed-form { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; background: #f9fafb; padding: 15px; border-radius: 8px; margin-bottom: 15px; border: 1px solid var(--border); }
         .fixed-form input, .fixed-form select { padding: 10px; border: 1px solid var(--border); border-radius: 6px; font-size: 14px; box-sizing: border-box; width: 100%; }
         .fixed-form button { grid-column: span 2; padding: 12px; background-color: var(--primary); color: white; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; }
@@ -111,7 +115,6 @@
             .filter-controls-row { flex-wrap: nowrap; }
             .cal-day { min-height: 80px; padding: 8px; }
             .cal-date { font-size: 14px; }
-            .cal-inc, .cal-exp { font-size: 12px; }
             .fixed-form { grid-template-columns: 1fr 2fr 2fr 2fr 2fr; }
             .fixed-form button { grid-column: span 1; }
         }
@@ -213,7 +216,8 @@
         </div>
         
         <div class="calendar-container">
-            <h4>🗓️ 이번 달 흐름</h4>
+            <h4>🗓️ 이번 달 흐름 (상대적 비율)</h4>
+            <p style="font-size: 12px; color: #6b7280; text-align: center; margin-top: -10px; margin-bottom: 15px;">해당 일자를 누르면 구체적인 금액이 표시됩니다.</p>
             <div id="calendarGrid" class="calendar-grid"></div>
         </div>
 
@@ -528,6 +532,16 @@
         document.getElementById('netTotal').textContent = (totalInc - totalExp).toLocaleString() + "원";
     }
 
+    // ✨ 클릭 시 날짜별 상세 금액을 보여주는 함수
+    function showDaySummary(dateStr, inc, exp) {
+        if (inc === 0 && exp === 0) {
+            alert(`${dateStr}\n\n등록된 내역이 없습니다.`);
+            return;
+        }
+        alert(`${dateStr} 요약\n\n🔵 총 수입: ${inc.toLocaleString()}원\n🔴 총 지출: ${exp.toLocaleString()}원`);
+    }
+
+    // ✨ 달력을 상대적 비율 막대그래프로 렌더링하는 로직
     function renderCalendar() {
         const targetMonth = document.getElementById('statsMonth').value;
         if (!targetMonth) return;
@@ -546,6 +560,11 @@
             html += `<div class="cal-day cal-empty"></div>`;
         }
 
+        // 1. 해당 월의 최대 수입, 최대 지출 금액 찾기 (비율 계산용)
+        let maxInc = 0;
+        let maxExp = 0;
+        const dailyData = [];
+
         for(let i = 1; i <= lastDate; i++) {
             const dateStr = `${year}-${month}-${String(i).padStart(2, '0')}`;
             const dayEntries = entries.filter(e => e.date === dateStr);
@@ -556,17 +575,34 @@
                 else exp += e.amount;
             });
 
-            let amtHtml = '';
-            if(inc > 0) amtHtml += `<div class="cal-inc">+${inc.toLocaleString()}</div>`;
-            if(exp > 0) amtHtml += `<div class="cal-exp">-${exp.toLocaleString()}</div>`;
+            if(inc > maxInc) maxInc = inc;
+            if(exp > maxExp) maxExp = exp;
+
+            dailyData.push({ date: dateStr, dayNum: i, inc, exp });
+        }
+
+        // 2. 달력 칸 그리기 (상대적 길이를 가진 막대그래프 포함)
+        dailyData.forEach(data => {
+            let barsHtml = '<div class="cal-bar-wrapper">';
+            
+            if (data.inc > 0) {
+                const incPct = (data.inc / maxInc) * 100;
+                barsHtml += `<div class="cal-bar-inc" style="width: ${incPct}%;"></div>`;
+            }
+            if (data.exp > 0) {
+                const expPct = (data.exp / maxExp) * 100;
+                barsHtml += `<div class="cal-bar-exp" style="width: ${expPct}%;"></div>`;
+            }
+            barsHtml += '</div>';
 
             html += `
-                <div class="cal-day">
-                    <div class="cal-date">${i}</div>
-                    ${amtHtml}
+                <div class="cal-day" onclick="showDaySummary('${data.date}', ${data.inc}, ${data.exp})">
+                    <div class="cal-date">${data.dayNum}</div>
+                    ${(data.inc > 0 || data.exp > 0) ? barsHtml : ''}
                 </div>
             `;
-        }
+        });
+        
         calBox.innerHTML = html;
     }
 
@@ -601,19 +637,15 @@
         incomeChartInstance = createChart('incomeChart', incData, '수입', incColors);
     }
 
-    // ✨ 항목별 분석 로직으로 개선된 스마트 코멘트
     function renderComparisonComment() {
         const targetMonth = document.getElementById('statsMonth').value;
         if (!targetMonth) return;
         
         const [year, month] = targetMonth.split('-').map(Number);
-        
-        // 이전 달 계산
         const prevYear = month === 1 ? year - 1 : year;
         const prevMonth = month === 1 ? 12 : month - 1;
         const prevMonthStr = `${prevYear}-${String(prevMonth).padStart(2, '0')}`;
         
-        // 이번 달과 지난 달의 '지출' 내역만 필터링
         const currentExpEntries = entries.filter(e => e.date.startsWith(targetMonth) && e.type === 'expense');
         const prevExpEntries = entries.filter(e => e.date.startsWith(prevMonthStr) && e.type === 'expense');
         
@@ -625,37 +657,31 @@
             return;
         }
 
-        // 항목별로 지출 합산
         const currCatSums = {};
         const prevCatSums = {};
         
         currentExpEntries.forEach(e => currCatSums[e.category] = (currCatSums[e.category] || 0) + e.amount);
         prevExpEntries.forEach(e => prevCatSums[e.category] = (prevCatSums[e.category] || 0) + e.amount);
         
-        // 지출이 늘어난 항목 찾기
         const increasedCats = [];
         
         for (const cat in currCatSums) {
             const currentAmt = currCatSums[cat];
-            const prevAmt = prevCatSums[cat] || 0; // 지난 달에 해당 항목 지출이 없었으면 0으로 계산
+            const prevAmt = prevCatSums[cat] || 0;
             if (currentAmt > prevAmt) {
                 increasedCats.push({ category: cat, diff: currentAmt - prevAmt });
             }
         }
         
-        // 지출 증가 폭이 큰 순서대로 정렬
         increasedCats.sort((a, b) => b.diff - a.diff);
 
-        // UI 렌더링
         if (increasedCats.length > 0) {
             commentBox.className = "comment-box warn";
             let html = `🚨 <b>지출 경고!</b> 지난달(${prevMonth}월)보다 지출이 늘어난 항목이 있습니다.<br>`;
             html += `<div style="display: inline-block; text-align: left; margin-top: 10px; font-size: 14px;">`;
-            
             increasedCats.forEach(item => {
                 html += `<div style="margin-bottom: 4px;">• <b>${item.category}</b> : <span class="txt-expense">+${item.diff.toLocaleString()}원</span></div>`;
             });
-            
             html += `</div>`;
             commentBox.innerHTML = html;
         } else {
