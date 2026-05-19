@@ -6,6 +6,9 @@
     <title>나만의 스마트 가계부</title>
     
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore-compat.js"></script>
 
     <style>
         :root {
@@ -69,7 +72,6 @@
         th, td { padding: 14px 10px; border-bottom: 1px solid var(--border); text-align: center; }
         th { background-color: #f9fafb; color: var(--text-muted); font-weight: 600; }
         
-        /* ✨ 클릭 가능한 셀 스타일 추가 */
         .clickable-cell { cursor: pointer; transition: background-color 0.2s; }
         tr:hover .clickable-cell { background-color: #e5e7eb; } 
         
@@ -126,9 +128,6 @@
             .fixed-form button { grid-column: span 1; }
         }
     </style>
-    
-    <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore-compat.js"></script>
 </head>
 <body>
 
@@ -324,7 +323,11 @@
     }
 
     function saveData() {
-        db.collection("budget").doc("my_data").set({ categories, entries, fixedEntries: fixedEntries || [] });
+        db.collection("budget").doc("my_data").set({ categories, entries, fixedEntries: fixedEntries || [] })
+        .catch(error => {
+            console.error("저장 오류:", error);
+            alert("데이터 저장에 실패했습니다. Firebase 권한 설정을 확인해주세요.");
+        });
     }
 
     function loadDataFromCloud() {
@@ -334,7 +337,9 @@
                 categories = data.categories || categories;
                 entries = data.entries || [];
                 fixedEntries = data.fixedEntries || [];
-            } else { saveData(); }
+            } else { 
+                saveData(); 
+            }
             updateCategoryOptions();
             updateFixedCategoryOptions();
             renderDataTab();
@@ -345,6 +350,9 @@
             
             renderTables();
             updateStatsTab();
+        }, (error) => {
+            console.error("불러오기 오류:", error);
+            alert("데이터베이스(Firebase) 연결에 문제가 있습니다. Firestore 보안 규칙이 읽기/쓰기를 허용하는지 확인해 주세요!");
         });
     }
 
@@ -476,6 +484,28 @@
         }
     }
 
+    // ✨ 고정 자금 테이블 렌더링 누락본 추가 (중요)
+    function renderFixedTable() {
+        const tbody = document.getElementById('fixedTableBody');
+        tbody.innerHTML = '';
+        
+        if(!fixedEntries) fixedEntries = [];
+        
+        fixedEntries.forEach(fe => {
+            const tr = document.createElement('tr');
+            const typeStr = fe.type === 'income' ? '<span class="txt-income">수입</span>' : '<span class="txt-expense">지출</span>';
+            tr.innerHTML = `
+                <td>${typeStr}</td>
+                <td>매월 ${fe.day}일</td>
+                <td>${fe.category}</td>
+                <td>${fe.detail}</td>
+                <td>${fe.amount.toLocaleString()}</td>
+                <td><button class="delete-btn" onclick="deleteFixedEntry(${fe.id})">삭제</button></td>
+            `;
+            tbody.appendChild(tr);
+        });
+    }
+
     function addOrEditEntry() {
         const type = document.querySelector('input[name="type"]:checked').value;
         const date = document.getElementById('dateInput').value;
@@ -548,14 +578,17 @@
         } 
     }
 
-    // ✨ 표 항목(td)에 클릭 이벤트와 클래스(clickable-cell) 적용
     function renderTables() {
         const searchMonth = document.getElementById('searchMonth').value;
         const keyword = document.getElementById('searchInput').value.toLowerCase().trim();
         
         const filtered = entries.filter(e => {
-            const matchesMonth = e.date.startsWith(searchMonth);
-            const matchesKeyword = e.detail.toLowerCase().includes(keyword) || e.category.toLowerCase().includes(keyword);
+            const eDate = e.date || '';
+            const eDetail = e.detail || '';
+            const eCategory = e.category || '';
+            
+            const matchesMonth = eDate.startsWith(searchMonth);
+            const matchesKeyword = eDetail.toLowerCase().includes(keyword) || eCategory.toLowerCase().includes(keyword);
             return matchesMonth && matchesKeyword;
         }).sort((a, b) => new Date(a.date) - new Date(b.date));
 
@@ -661,7 +694,7 @@
 
     function renderCharts() {
         const targetMonth = document.getElementById('statsMonth').value;
-        const filtered = entries.filter(e => e.date.startsWith(targetMonth));
+        const filtered = entries.filter(e => e.date && e.date.startsWith(targetMonth));
         const expData = {}; const incData = {};
         filtered.forEach(e => {
             if (e.type === 'expense') expData[e.category] = (expData[e.category] || 0) + e.amount;
@@ -705,8 +738,8 @@
         const prevMonth = month === 1 ? 12 : month - 1;
         const prevMonthStr = `${prevYear}-${String(prevMonth).padStart(2, '0')}`;
         
-        const currentExpEntries = entries.filter(e => e.date.startsWith(targetMonth) && e.type === 'expense');
-        const prevExpEntries = entries.filter(e => e.date.startsWith(prevMonthStr) && e.type === 'expense');
+        const currentExpEntries = entries.filter(e => e.date && e.date.startsWith(targetMonth) && e.type === 'expense');
+        const prevExpEntries = entries.filter(e => e.date && e.date.startsWith(prevMonthStr) && e.type === 'expense');
         
         const commentBox = document.getElementById('comparisonComment');
         
