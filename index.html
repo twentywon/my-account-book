@@ -48,8 +48,8 @@
         .input-row { display: flex; flex-direction: column; gap: 12px; margin-bottom: 12px; }
         .input-row input, .input-row select { width: 100%; padding: 15px; border: 1px solid var(--border); border-radius: 10px; font-size: 16px; box-sizing: border-box; background-color: white; }
         
-        .btn-submit { width: 100%; padding: 16px; background-color: var(--primary); color: white; border: none; border-radius: 10px; font-size: 18px; font-weight: bold; cursor: pointer; }
-        .btn-cancel { background-color: #9ca3af; flex: 0.4; } /* 취소 버튼용 */
+        .btn-submit { width: 100%; padding: 16px; background-color: var(--primary); color: white; border: none; border-radius: 10px; font-size: 18px; font-weight: bold; cursor: pointer; transition: background-color 0.2s;}
+        .btn-cancel { background-color: #9ca3af; flex: 0.4; } 
 
         .filter-section { display: flex; flex-direction: column; gap: 12px; margin-bottom: 20px; }
         .filter-section h3 { margin: 0; font-size: 18px; }
@@ -69,9 +69,12 @@
         th, td { padding: 14px 10px; border-bottom: 1px solid var(--border); text-align: center; }
         th { background-color: #f9fafb; color: var(--text-muted); font-weight: 600; }
         
+        /* ✨ 클릭 가능한 셀 스타일 추가 */
+        .clickable-cell { cursor: pointer; transition: background-color 0.2s; }
+        tr:hover .clickable-cell { background-color: #e5e7eb; } 
+        
         .action-btns { display: flex; justify-content: center; gap: 5px; }
-        .edit-btn { padding: 6px 10px; background-color: #e5e7eb; color: var(--text-main); border-radius: 5px; border: none; font-weight: bold; cursor: pointer; }
-        .delete-btn { padding: 6px 10px; background-color: #fee2e2; color: var(--expense); border-radius: 5px; border: none; font-weight: bold; cursor: pointer; }
+        .delete-btn { padding: 6px 12px; background-color: #fee2e2; color: var(--expense); border-radius: 5px; border: none; font-weight: bold; cursor: pointer; }
 
         .summary { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; padding: 20px; background: #fff; border-radius: 12px; border: 1px solid var(--border); margin-top: 20px; }
         .summary div { text-align: center; font-size: 14px; color: var(--text-muted); }
@@ -96,8 +99,8 @@
 
         .chart-container { background: #fff; padding: 20px; border-radius: 12px; border: 1px solid var(--border); margin-bottom: 20px; }
         .chart-container h4 { margin: 0 0 15px 0; text-align: center; font-size: 18px; color: var(--text-main); }
-        .chart-box { position: relative; height: 300px; width: 100%; display: flex; justify-content: center; }
-        .no-data-msg { text-align: center; padding: 50px 0; color: var(--text-muted); font-size: 15px; }
+        .chart-box { position: relative; height: 300px; width: 100%; display: flex; justify-content: center; align-items: center;}
+        .no-data-msg { text-align: center; color: var(--text-muted); font-size: 15px; }
 
         .data-section h3 { font-size: 18px; padding-bottom: 10px; border-bottom: 2px solid var(--border); display: flex; justify-content: space-between; align-items: center; margin-top: 0; }
         .data-list { display: flex; flex-wrap: wrap; gap: 10px; list-style: none; padding: 0; margin: 0;}
@@ -161,7 +164,7 @@
             </div>
             <div style="display: flex; gap: 10px; margin-top: 10px;">
                 <button id="submitBtn" class="btn-submit" onclick="addOrEditEntry()">내역 추가하기</button>
-                <button id="cancelBtn" class="btn-submit btn-cancel" style="display:none;" onclick="cancelEdit()">취소</button>
+                <button id="cancelBtn" class="btn-submit btn-cancel" style="display:none;" onclick="cancelEdit()">수정 취소</button>
             </div>
         </div>
 
@@ -180,6 +183,7 @@
         </div>
 
         <div class="tables-container" style="margin-top: 25px;">
+            <p style="font-size: 13px; color: var(--text-muted); text-align: right; margin-bottom: 5px;">💡 내역을 클릭하면 수정할 수 있습니다.</p>
             <div class="table-wrapper">
                 <div class="table-header bg-income">
                     <span>수입 내역</span>
@@ -219,7 +223,7 @@
         </div>
         
         <div id="comparisonComment" class="comment-box">
-            지난달 데이터 분석 중...
+            데이터 분석 중...
         </div>
         
         <div class="calendar-container">
@@ -230,11 +234,11 @@
 
         <div class="chart-container">
             <h4>🔴 지출 비율</h4>
-            <div id="expenseChartBox" class="chart-box"><canvas id="expenseChart"></canvas></div>
+            <div id="expenseChartBox" class="chart-box"></div>
         </div>
         <div class="chart-container">
             <h4>🔵 수입 비율</h4>
-            <div id="incomeChartBox" class="chart-box"><canvas id="incomeChart"></canvas></div>
+            <div id="incomeChartBox" class="chart-box"></div>
         </div>
     </div>
 
@@ -294,7 +298,7 @@
     
     let expenseChartInstance = null;
     let incomeChartInstance = null;
-    let editingEntryId = null; // 수정 중인 내역의 ID를 저장할 변수
+    let editingEntryId = null;
 
     window.onload = function() {
         const today = new Date();
@@ -388,7 +392,7 @@
     function updateCategoryOptions() {
         const type = document.querySelector('input[name="type"]:checked').value;
         const select = document.getElementById('categorySelect');
-        const currentValue = select.value; // 수정 시 기존 선택값 유지용
+        const currentValue = select.value; 
         
         select.innerHTML = '';
         categories[type].forEach(cat => {
@@ -472,7 +476,6 @@
         }
     }
 
-    // ✨ 내역 추가 및 수정 통합 로직
     function addOrEditEntry() {
         const type = document.querySelector('input[name="type"]:checked').value;
         const date = document.getElementById('dateInput').value;
@@ -484,15 +487,13 @@
         if (!date || !amountStr) return alert("날짜와 금액을 입력해주세요.");
         
         if (editingEntryId) {
-            // 수정 모드일 때
             const index = entries.findIndex(e => e.id === editingEntryId);
             if (index > -1) {
                 entries[index] = { ...entries[index], type, date, category, detail, amount };
             }
-            alert("수정되었습니다.");
-            cancelEdit(); // 폼 초기화
+            alert("성공적으로 수정되었습니다.");
+            cancelEdit(); 
         } else {
-            // 새 내역 추가 모드일 때
             entries.push({ id: Date.now(), type, date, category, detail, amount });
             document.getElementById('detailInput').value = ''; 
             document.getElementById('amountInput').value = '';
@@ -501,44 +502,36 @@
         saveData();
     }
     
-    // ✨ 내역 수정을 위해 데이터를 폼으로 불러오는 로직
     function editEntry(id) {
         const entry = entries.find(e => e.id === id);
         if (!entry) return;
         
         editingEntryId = id;
         
-        // 라디오 버튼(수입/지출) 셋팅
         document.querySelector(`input[name="type"][value="${entry.type}"]`).checked = true;
-        updateCategoryOptions(); // 카테고리 목록 갱신
+        updateCategoryOptions(); 
         
-        // 입력 필드 채우기
         document.getElementById('dateInput').value = entry.date;
         document.getElementById('categorySelect').value = entry.category;
         document.getElementById('detailInput').value = entry.detail;
         document.getElementById('amountInput').value = entry.amount.toLocaleString('ko-KR');
         
-        // 버튼 텍스트 변경 및 취소 버튼 표시
         const submitBtn = document.getElementById('submitBtn');
         submitBtn.textContent = '내역 수정완료';
-        submitBtn.style.backgroundColor = '#10b981'; // 눈에 띄게 초록색으로 변경
+        submitBtn.style.backgroundColor = '#10b981'; 
         document.getElementById('cancelBtn').style.display = 'block';
         
-        // 사용자가 편하게 볼 수 있도록 화면 맨 위로 부드럽게 스크롤
         window.scrollTo({ top: 0, behavior: 'smooth' });
     }
     
-    // ✨ 수정 취소(폼 초기화) 로직
     function cancelEdit() {
         editingEntryId = null;
         
-        // 버튼 원래대로 복구
         const submitBtn = document.getElementById('submitBtn');
         submitBtn.textContent = '내역 추가하기';
         submitBtn.style.backgroundColor = 'var(--primary)';
         document.getElementById('cancelBtn').style.display = 'none';
         
-        // 입력 폼 비우기 (날짜는 그대로 유지)
         document.getElementById('detailInput').value = ''; 
         document.getElementById('amountInput').value = '';
         document.querySelector('input[name="type"][value="expense"]').checked = true;
@@ -547,11 +540,15 @@
 
     function deleteEntry(id) { 
         if (confirm("정말 이 내역을 삭제하시겠습니까?")) { 
+            if (editingEntryId === id) {
+                cancelEdit();
+            }
             entries = entries.filter(entry => entry.id !== id); 
             saveData(); 
         } 
     }
 
+    // ✨ 표 항목(td)에 클릭 이벤트와 클래스(clickable-cell) 적용
     function renderTables() {
         const searchMonth = document.getElementById('searchMonth').value;
         const keyword = document.getElementById('searchInput').value.toLowerCase().trim();
@@ -570,13 +567,12 @@
         filtered.forEach(entry => {
             const tr = document.createElement('tr');
             tr.innerHTML = `
-                <td>${entry.date.slice(5)}</td>
-                <td>${entry.category}</td>
-                <td style="text-align:left;">${entry.detail}</td>
-                <td style="font-weight:bold;">${entry.amount.toLocaleString()}</td>
+                <td class="clickable-cell" onclick="editEntry(${entry.id})" title="클릭하여 수정">${entry.date.slice(5)}</td>
+                <td class="clickable-cell" onclick="editEntry(${entry.id})" title="클릭하여 수정">${entry.category}</td>
+                <td class="clickable-cell" onclick="editEntry(${entry.id})" title="클릭하여 수정" style="text-align:left;">${entry.detail}</td>
+                <td class="clickable-cell" onclick="editEntry(${entry.id})" title="클릭하여 수정" style="font-weight:bold;">${entry.amount.toLocaleString()}</td>
                 <td class="action-btns">
-                    <button class="edit-btn" onclick="editEntry(${entry.id})">✏️</button>
-                    <button class="delete-btn" onclick="deleteEntry(${entry.id})">X</button>
+                    <button class="delete-btn" onclick="deleteEntry(${entry.id})">삭제</button>
                 </td>
             `;
             if (entry.type === 'income') { incBody.appendChild(tr); totalInc += entry.amount; } 
@@ -678,20 +674,26 @@
         if (expenseChartInstance) expenseChartInstance.destroy();
         if (incomeChartInstance) incomeChartInstance.destroy();
 
-        const createChart = (ctxId, dataObj, title, colors) => {
-            const ctx = document.getElementById(ctxId);
+        const createChart = (boxId, canvasId, dataObj, title, colors) => {
+            const box = document.getElementById(boxId);
+            
             if(Object.keys(dataObj).length === 0) {
-                ctx.parentElement.innerHTML = `<div class="no-data-msg">${title} 내역이 없습니다.</div>`;
+                box.innerHTML = `<div class="no-data-msg">${title} 내역이 없습니다.</div>`;
                 return null;
             }
+            
+            box.innerHTML = `<canvas id="${canvasId}"></canvas>`;
+            const ctx = document.getElementById(canvasId);
+            
             return new Chart(ctx, {
                 type: 'doughnut',
                 data: { labels: Object.keys(dataObj), datasets: [{ data: Object.values(dataObj), backgroundColor: colors }] },
                 options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } }
             });
         };
-        expenseChartInstance = createChart('expenseChart', expData, '지출', expColors);
-        incomeChartInstance = createChart('incomeChart', incData, '수입', incColors);
+        
+        expenseChartInstance = createChart('expenseChartBox', 'expenseChart', expData, '지출', expColors);
+        incomeChartInstance = createChart('incomeChartBox', 'incomeChart', incData, '수입', incColors);
     }
 
     function renderComparisonComment() {
