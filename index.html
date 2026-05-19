@@ -9,10 +9,10 @@
 
     <style>
         :root {
-            --primary: #4f46e5; /* 메인 색상 (인디고) */
+            --primary: #4f46e5;
             --primary-hover: #4338ca;
-            --income: #3b82f6; /* 수입: 파란색 */
-            --expense: #ef4444; /* 지출: 빨간색 */
+            --income: #3b82f6;
+            --expense: #ef4444;
             --bg-color: #f3f4f6;
             --card-bg: #ffffff;
             --text-main: #1f2937;
@@ -55,6 +55,10 @@
         .filter-controls-row input { padding: 12px; border: 1px solid var(--border); border-radius: 8px; font-size: 16px; box-sizing: border-box; flex: 1; min-width: 140px; }
         #searchInput { background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="gray" viewBox="0 0 16 16"><path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0z"/></svg>'); background-repeat: no-repeat; background-position: 12px center; padding-left: 35px; }
 
+        /* 전월 대비 코멘트 박스 스타일 */
+        .comment-box { background-color: #f0fdf4; border: 1px solid #bbf7d0; padding: 15px; border-radius: 12px; margin-bottom: 20px; font-size: 15px; font-weight: 500; text-align: center; }
+        .comment-box.warn { background-color: #fef2f2; border: 1px solid #fca5a5; }
+
         .table-wrapper { border: 1px solid var(--border); border-radius: 10px; overflow: hidden; margin-bottom: 25px; }
         .table-header { padding: 15px; font-weight: bold; font-size: 16px; color: white; display: flex; justify-content: space-between; }
         .bg-income { background-color: var(--income); }
@@ -71,7 +75,6 @@
         .summary .full-width { grid-column: span 2; border-top: 1px dashed var(--border); padding-top: 15px; margin-top: 10px; }
         .summary .full-width span { font-size: 22px; color: var(--primary); }
 
-        /* 달력 스타일 */
         .calendar-container { background: #fff; padding: 20px; border-radius: 12px; border: 1px solid var(--border); margin-bottom: 20px; }
         .calendar-container h4 { margin: 0 0 15px 0; text-align: center; font-size: 18px; color: var(--text-main); }
         .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
@@ -93,6 +96,14 @@
         .btn-action { font-size: 16px; background: none; border: none; cursor: pointer; }
         .btn-add { background-color: var(--text-main); color: white; border: none; border-radius: 8px; padding: 8px 12px; font-size: 13px; cursor: pointer; }
 
+        /* 고정 내역 입력 폼 및 테이블 폼 스타일 */
+        .fixed-form { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; background: #f9fafb; padding: 15px; border-radius: 8px; margin-bottom: 15px; border: 1px solid var(--border); }
+        .fixed-form input, .fixed-form select { padding: 10px; border: 1px solid var(--border); border-radius: 6px; font-size: 14px; box-sizing: border-box; width: 100%; }
+        .fixed-form button { grid-column: span 2; padding: 12px; background-color: var(--primary); color: white; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; }
+        .fixed-table { width: 100%; font-size: 13px; border-collapse: collapse; margin-top: 10px; }
+        .fixed-table th, .fixed-table td { padding: 10px 6px; border: 1px solid var(--border); text-align: center; }
+        .fixed-table th { background: #f3f4f6; }
+
         @media (min-width: 600px) {
             .input-row { flex-direction: row; }
             .summary { grid-template-columns: 1fr 1fr 1fr; }
@@ -101,6 +112,8 @@
             .cal-day { min-height: 80px; padding: 8px; }
             .cal-date { font-size: 14px; }
             .cal-inc, .cal-exp { font-size: 12px; }
+            .fixed-form { grid-template-columns: 1fr 2fr 2fr 2fr 2fr; }
+            .fixed-form button { grid-column: span 1; }
         }
     </style>
     
@@ -195,6 +208,10 @@
             <input type="month" id="statsMonth" onchange="syncMonths(this.value)">
         </div>
         
+        <div id="comparisonComment" class="comment-box">
+            지난달 데이터 분석 중...
+        </div>
+        
         <div class="calendar-container">
             <h4>🗓️ 이번 달 흐름</h4>
             <div id="calendarGrid" class="calendar-grid"></div>
@@ -215,9 +232,31 @@
             <h3 class="txt-income"><span>🔵 수입 항목</span><button class="btn-add" onclick="addCategory('income')">+ 추가</button></h3>
             <ul class="data-list" id="dataIncomeList"></ul>
         </div>
-        <div class="data-section" style="margin-top: 35px;">
+        <div class="data-section" style="margin-top: 25px;">
             <h3 class="txt-expense"><span>🔴 지출 항목</span><button class="btn-add" onclick="addCategory('expense')">+ 추가</button></h3>
             <ul class="data-list" id="dataExpenseList"></ul>
+        </div>
+        
+        <div class="data-section" style="margin-top: 35px;">
+            <h3>🔄 매월 고정 수입/지출 관리</h3>
+            <div class="fixed-form">
+                <select id="fixedType" onchange="updateFixedCategoryOptions()">
+                    <option value="expense">지출</option>
+                    <option value="income">수입</option>
+                </select>
+                <input type="number" id="fixedDay" min="1" max="31" placeholder="날짜 (1~31)">
+                <select id="fixedCategory"></select>
+                <input type="text" id="fixedDetail" placeholder="내용 (예: 월세)">
+                <input type="number" id="fixedAmount" placeholder="금액 (숫자)">
+                <button onclick="addFixedEntry()">고정 자금 등록</button>
+            </div>
+            
+            <table class="fixed-table">
+                <thead>
+                    <tr><th>구분</th><th>일</th><th>항목</th><th>내용</th><th>금액</th><th>삭제</th></tr>
+                </thead>
+                <tbody id="fixedTableBody"></tbody>
+            </table>
         </div>
     </div>
 </div>
@@ -240,6 +279,8 @@
         expense: ['식비', '교통비', '문화생활', '생필품', '주거/통신']
     };
     let entries = [];
+    let fixedEntries = []; // 고정 자금 저장 배열 추가
+    
     let expenseChartInstance = null;
     let incomeChartInstance = null;
 
@@ -255,6 +296,7 @@
     function syncMonths(selectedMonth) {
         document.getElementById('searchMonth').value = selectedMonth;
         document.getElementById('statsMonth').value = selectedMonth;
+        checkAndApplyFixedEntries(selectedMonth); // 월 변경 시 고정 자금 체크 및 주입
         renderTables();
         updateStatsTab();
     }
@@ -262,10 +304,11 @@
     function updateStatsTab() {
         renderCalendar();
         renderCharts();
+        renderComparisonComment(); // 전월 대비 패턴 멘트 업데이트
     }
 
     function saveData() {
-        db.collection("budget").doc("my_data").set({ categories, entries });
+        db.collection("budget").doc("my_data").set({ categories, entries, fixedEntries: fixedEntries || [] });
     }
 
     function loadDataFromCloud() {
@@ -274,12 +317,48 @@
                 const data = doc.data();
                 categories = data.categories || categories;
                 entries = data.entries || [];
+                fixedEntries = data.fixedEntries || [];
             } else { saveData(); }
             updateCategoryOptions();
+            updateFixedCategoryOptions();
             renderDataTab();
+            renderFixedTable();
+            
+            const currentMonth = document.getElementById('searchMonth').value;
+            checkAndApplyFixedEntries(currentMonth); // 클라우드 로드 후 자동 고정자금 주입
+            
             renderTables();
             updateStatsTab();
         });
+    }
+
+    function checkAndApplyFixedEntries(targetMonth) {
+        if (!fixedEntries || fixedEntries.length === 0) return;
+        let isUpdated = false;
+        
+        fixedEntries.forEach(fe => {
+            // 이번 달에 동일한 고정자금 고유태그(fixedId)를 가진 내역이 이미 들어있는지 판단
+            const tag = `fixed-${fe.id}-${targetMonth}`;
+            const exists = entries.some(e => e.fixedTag === tag);
+            
+            if (!exists) {
+                const dateStr = `${targetMonth}-${String(fe.day).padStart(2, '0')}`;
+                entries.push({
+                    id: Date.now() + Math.random(),
+                    type: fe.type,
+                    date: dateStr,
+                    category: fe.category,
+                    detail: `[고정] ${fe.detail}`,
+                    amount: fe.amount,
+                    fixedTag: tag // 중복 주입 방지 태그
+                });
+                isUpdated = true;
+            }
+        });
+        
+        if (isUpdated) {
+            saveData();
+        }
     }
 
     function switchTab(tabId, btnElement) {
@@ -298,6 +377,17 @@
     function updateCategoryOptions() {
         const type = document.querySelector('input[name="type"]:checked').value;
         const select = document.getElementById('categorySelect');
+        select.innerHTML = '';
+        categories[type].forEach(cat => {
+            const option = document.createElement('option');
+            option.value = cat; option.textContent = cat;
+            select.appendChild(option);
+        });
+    }
+
+    function updateFixedCategoryOptions() {
+        const type = document.getElementById('fixedType').value;
+        const select = document.getElementById('fixedCategory');
         select.innerHTML = '';
         categories[type].forEach(cat => {
             const option = document.createElement('option');
@@ -336,6 +426,57 @@
         if (confirm(`'${categories[type][index]}' 삭제하시겠습니까?`)) { categories[type].splice(index, 1); saveData(); }
     }
 
+    // 고정 지출/수입 등록 로직
+    function addFixedEntry() {
+        const type = document.getElementById('fixedType').value;
+        const day = parseInt(document.getElementById('fixedDay').value);
+        const category = document.getElementById('fixedCategory').value;
+        const detail = document.getElementById('fixedDetail').value.trim();
+        const amount = parseInt(document.getElementById('fixedAmount').value);
+
+        if(!day || day < 1 || day > 31 || !detail || !amount) {
+            return alert("모든 항목을 올바르게 입력해 주세요. (날짜는 1~31)");
+        }
+
+        fixedEntries.push({ id: Date.now(), type, day, category, detail, amount });
+        saveData();
+
+        document.getElementById('fixedDay').value = '';
+        document.getElementById('fixedDetail').value = '';
+        document.getElementById('fixedAmount').value = '';
+        
+        const currentMonth = document.getElementById('searchMonth').value;
+        checkAndApplyFixedEntries(currentMonth);
+    }
+
+    function deleteFixedEntry(id) {
+        if (confirm("이 고정 자금 설정을 삭제하시겠습니까? (이미 기존 가계부에 자동 등록된 내역은 유지됩니다)")) {
+            fixedEntries = fixedEntries.filter(fe => fe.id !== id);
+            saveData();
+        }
+    }
+
+    function renderFixedTable() {
+        const tbody = document.getElementById('fixedTableBody');
+        tbody.innerHTML = '';
+        if(!fixedEntries || fixedEntries.length === 0) {
+            tbody.innerHTML = '<tr><td colspan="6">등록된 고정 자금이 없습니다.</td></tr>';
+            return;
+        }
+        fixedEntries.forEach(fe => {
+            const tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td class="${fe.type==='income'?'txt-income':'txt-expense'}">${fe.type==='income'?'수입':'지출'}</td>
+                <td>매월 ${fe.day}일</td>
+                <td>${fe.category}</td>
+                <td>${fe.detail}</td>
+                <td style="font-weight:bold;">${fe.amount.toLocaleString()}원</td>
+                <td><button class="delete-btn" onclick="deleteFixedEntry(${fe.id})">X</button></td>
+            `;
+            tbody.appendChild(tr);
+        });
+    }
+
     function addEntry() {
         const type = document.querySelector('input[name="type"]:checked').value;
         const date = document.getElementById('dateInput').value;
@@ -355,7 +496,6 @@
         const searchMonth = document.getElementById('searchMonth').value;
         const keyword = document.getElementById('searchInput').value.toLowerCase().trim();
         
-        // ✨ 일별 오름차순 자동 정렬 로직 (과거 -> 최신)
         const filtered = entries.filter(e => {
             const matchesMonth = e.date.startsWith(searchMonth);
             const matchesKeyword = e.detail.toLowerCase().includes(keyword) || e.category.toLowerCase().includes(keyword);
@@ -381,7 +521,7 @@
         });
 
         if(incBody.innerHTML === '') incBody.innerHTML = '<tr><td colspan="5">내역 없음</td></tr>';
-        if(expBody.innerHTML === '') expBody.innerHTML = '<tr><td colspan="5">내역 없음</td></tr>';
+        if(expBody.innerHTML === '') incBody.innerHTML = '<tr><td colspan="5">내역 없음</td></tr>';
 
         document.getElementById('subTotalIncome').textContent = `${totalInc.toLocaleString()} 원`;
         document.getElementById('subTotalExpense').textContent = `${totalExp.toLocaleString()} 원`;
@@ -390,28 +530,24 @@
         document.getElementById('netTotal').textContent = (totalInc - totalExp).toLocaleString() + "원";
     }
 
-    // ✨ 달력 렌더링 함수
     function renderCalendar() {
         const targetMonth = document.getElementById('statsMonth').value;
         if (!targetMonth) return;
         const [year, month] = targetMonth.split('-');
         
-        const firstDay = new Date(year, month - 1, 1).getDay(); // 0(일) ~ 6(토)
-        const lastDate = new Date(year, month, 0).getDate(); // 해당 월의 마지막 일자
+        const firstDay = new Date(year, month - 1, 1).getDay();
+        const lastDate = new Date(year, month, 0).getDate();
 
         const calBox = document.getElementById('calendarGrid');
         let html = '';
         
-        // 요일 헤더
         const days = ['일', '월', '화', '수', '목', '금', '토'];
         days.forEach(d => html += `<div class="cal-header">${d}</div>`);
 
-        // 빈 날짜 채우기 (1일 전까지)
         for(let i = 0; i < firstDay; i++) {
             html += `<div class="cal-day cal-empty"></div>`;
         }
 
-        // 실제 날짜 채우기
         for(let i = 1; i <= lastDate; i++) {
             const dateStr = `${year}-${month}-${String(i).padStart(2, '0')}`;
             const dayEntries = entries.filter(e => e.date === dateStr);
@@ -445,7 +581,6 @@
             else incData[e.category] = (incData[e.category] || 0) + e.amount;
         });
         
-        // 차트 색상을 테마에 맞게 파란/빨간 계열로 맞춤 구성
         const expColors = ['#ef4444', '#f87171', '#fca5a5', '#dc2626', '#b91c1c', '#991b1b', '#7f1d1d'];
         const incColors = ['#3b82f6', '#60a5fa', '#93c5fd', '#2563eb', '#1d4ed8', '#1e40af', '#1e3a8a'];
 
@@ -468,8 +603,46 @@
         incomeChartInstance = createChart('incomeChart', incData, '수입', incColors);
     }
 
+    // ✨ 소비 패턴 스마트 코멘트 생성 로직
+    function renderComparisonComment() {
+        const targetMonth = document.getElementById('statsMonth').value;
+        if (!targetMonth) return;
+        
+        const [year, month] = targetMonth.split('-').map(Number);
+        
+        // 이전 달 계산 (1월일 경우 전년도 12월로 포맷)
+        const prevYear = month === 1 ? year - 1 : year;
+        const prevMonth = month === 1 ? 12 : month - 1;
+        const prevMonthStr = `${prevYear}-${String(prevMonth).padStart(2, '0')}`;
+        
+        // 현재 달과 이전 달의 지출 합산 계산
+        const currentExpense = entries.filter(e => e.date.startsWith(targetMonth) && e.type === 'expense').reduce((sum, e) => sum + e.amount, 0);
+        const prevExpense = entries.filter(e => e.date.startsWith(prevMonthStr) && e.type === 'expense').reduce((sum, e) => sum + e.amount, 0);
+        
+        const commentBox = document.getElementById('comparisonComment');
+        
+        if (currentExpense === 0 && prevExpense === 0) {
+            commentBox.className = "comment-box";
+            commentBox.textContent = "💡 아직 이번 달 지출 내역이 없습니다. 소비를 기록해 보세요!";
+            return;
+        }
+
+        const difference = currentExpense - prevExpense;
+
+        if (difference > 0) {
+            commentBox.className = "comment-box warn";
+            commentBox.innerHTML = `🚨 <b>지출 경고!</b> 지난달(${prevMonth}월)보다 지출이 <b>${difference.toLocaleString()}원</b> 더 많습니다. 절약이 필요해요!`;
+        } else if (difference < 0) {
+            commentBox.className = "comment-box";
+            commentBox.innerHTML = `👏 <b>훌륭합니다!</b> 지난달(${prevMonth}월)보다 지출을 <b>${Math.abs(difference).toLocaleString()}원</b> 줄였습니다. 계속 유지하세요!`;
+        } else {
+            commentBox.className = "comment-box";
+            commentBox.innerHTML = `⚖️ 지난달(${prevMonth}월)과 지출 규모가 똑같습니다! 안정적인 소비 패턴을 유지 중입니다.`;
+        }
+    }
+
     function exportData() {
-        const data = { categories, entries };
+        const data = { categories, entries, fixedEntries };
         const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
         const a = document.createElement('a');
         a.href = URL.createObjectURL(blob);
@@ -484,7 +657,13 @@
         reader.onload = function(e) {
             try {
                 const data = JSON.parse(e.target.result);
-                if (data.categories && data.entries) { categories = data.categories; entries = data.entries; saveData(); alert("복구 완료!"); }
+                if (data.categories && data.entries) { 
+                    categories = data.categories; 
+                    entries = data.entries; 
+                    fixedEntries = data.fixedEntries || [];
+                    saveData(); 
+                    alert("복구 완료!"); 
+                }
             } catch (err) { alert("파일 오류"); }
         };
         reader.readAsText(file);
