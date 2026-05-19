@@ -2,7 +2,7 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>나만의 스마트 가계부</title>
     <style>
         :root {
@@ -12,73 +12,85 @@
             --expense: #e74c3c;
             --bg-color: #f0f2f5;
             --card-bg: #ffffff;
-            --text-main: #333333;
+            --text-main: #222222;
             --text-muted: #666666;
             --border: #e1e4e8;
         }
 
-        body { font-family: 'Pretendard', 'Malgun Gothic', sans-serif; background-color: var(--bg-color); margin: 0; padding: 20px; color: var(--text-main); }
-        .container { max-width: 800px; margin: 0 auto; background: var(--card-bg); border-radius: 12px; box-shadow: 0 8px 20px rgba(0,0,0,0.08); overflow: hidden; }
+        body { font-family: 'Pretendard', 'Malgun Gothic', sans-serif; background-color: var(--bg-color); margin: 0; padding: 15px; color: var(--text-main); line-height: 1.5; }
+        .container { max-width: 800px; margin: 0 auto; background: var(--card-bg); border-radius: 16px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); overflow: hidden; }
         
-        /* 헤더 및 파일 관리 */
-        .header { display: flex; justify-content: space-between; align-items: center; padding: 20px 25px; background-color: #fafbfc; border-bottom: 1px solid var(--border); }
-        .header h1 { margin: 0; font-size: 20px; color: var(--primary); }
-        .file-controls { display: flex; gap: 10px; }
-        .btn-small { padding: 8px 12px; font-size: 13px; border: none; border-radius: 6px; cursor: pointer; transition: 0.2s; font-weight: 600; }
+        /* 헤더 */
+        .header { padding: 20px; background-color: #fafbfc; border-bottom: 1px solid var(--border); }
+        .header h1 { margin: 0 0 15px 0; font-size: 22px; color: var(--primary); text-align: center; }
+        .file-controls { display: flex; gap: 8px; justify-content: center; }
+        .btn-small { flex: 1; padding: 12px; font-size: 13px; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; text-align: center; }
         .btn-save { background-color: var(--primary); color: white; }
         .btn-load { background-color: #f1f3f5; color: var(--text-main); border: 1px solid #ced4da; }
-        .btn-save:hover { background-color: var(--primary-hover); }
-        .btn-load:hover { background-color: #e9ecef; }
         input[type="file"] { display: none; }
 
         /* 탭 스타일 */
         .tabs { display: flex; background-color: #f8f9fa; border-bottom: 1px solid var(--border); }
-        .tab-btn { flex: 1; padding: 16px; border: none; background: none; cursor: pointer; font-size: 16px; font-weight: bold; color: var(--text-muted); transition: 0.2s; }
+        .tab-btn { flex: 1; padding: 18px; border: none; background: none; cursor: pointer; font-size: 16px; font-weight: bold; color: var(--text-muted); }
         .tab-btn.active { background-color: white; color: var(--primary); border-bottom: 3px solid var(--primary); }
-        .tab-btn:hover:not(.active) { background-color: #f1f3f5; }
-        .tab-content { display: none; padding: 25px; }
+
+        .tab-content { display: none; padding: 20px; }
         .tab-content.active { display: block; }
 
-        /* 폼 스타일 */
-        .input-card { background: #f8f9fa; padding: 20px; border-radius: 8px; margin-bottom: 25px; border: 1px solid var(--border); }
-        .radio-group { margin-bottom: 15px; font-weight: bold; }
-        .radio-group label { margin-right: 15px; cursor: pointer; display: inline-flex; align-items: center; gap: 5px; }
-        .input-row { display: flex; gap: 12px; margin-bottom: 12px; flex-wrap: wrap; }
-        .input-row input, .input-row select { flex: 1; padding: 12px; border: 1px solid var(--border); border-radius: 6px; font-size: 14px; min-width: 150px; }
-        .btn-submit { width: 100%; padding: 14px; background-color: var(--primary); color: white; border: none; border-radius: 6px; font-size: 16px; font-weight: bold; cursor: pointer; transition: 0.2s; }
-        .btn-submit:hover { background-color: var(--primary-hover); }
+        /* 입력 폼 */
+        .input-card { background: #f8f9fa; padding: 20px; border-radius: 12px; margin-bottom: 25px; border: 1px solid var(--border); }
+        .radio-group { margin-bottom: 20px; display: flex; justify-content: center; gap: 30px; }
+        .radio-group label { font-size: 18px; font-weight: bold; cursor: pointer; display: flex; align-items: center; gap: 8px; }
+        .radio-group input { width: 20px; height: 20px; }
+        
+        .input-row { display: flex; flex-direction: column; gap: 12px; margin-bottom: 12px; }
+        .input-row input, .input-row select { 
+            width: 100%; padding: 15px; border: 1px solid var(--border); border-radius: 10px; font-size: 16px; box-sizing: border-box; 
+            background-color: white;
+        }
+        .btn-submit { width: 100%; padding: 16px; background-color: var(--primary); color: white; border: none; border-radius: 10px; font-size: 18px; font-weight: bold; cursor: pointer; transition: 0.2s; margin-top: 10px; }
 
         /* 조회 영역 */
-        .filter-section { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
-        .filter-section input { padding: 10px; border: 1px solid var(--border); border-radius: 6px; font-size: 15px; font-weight: bold; }
+        .filter-section { display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px; padding: 0 5px; }
+        .filter-section h3 { margin: 0; font-size: 18px; }
+        .filter-section input { padding: 12px; border: 1px solid var(--border); border-radius: 8px; font-size: 16px; width: 100%; box-sizing: border-box; }
         
-        /* 분리된 테이블 영역 */
-        .tables-container { display: flex; flex-direction: column; gap: 20px; }
-        .table-wrapper { border: 1px solid var(--border); border-radius: 8px; overflow: hidden; }
-        .table-header { padding: 12px 15px; font-weight: bold; font-size: 15px; color: white; display: flex; justify-content: space-between; }
+        /* 테이블 영역 */
+        .tables-container { display: flex; flex-direction: column; gap: 25px; }
+        .table-wrapper { border: 1px solid var(--border); border-radius: 10px; overflow: hidden; }
+        .table-header { padding: 15px; font-weight: bold; font-size: 16px; color: white; display: flex; justify-content: space-between; }
         .bg-income { background-color: var(--income); }
         .bg-expense { background-color: var(--expense); }
         
-        table { width: 100%; border-collapse: collapse; font-size: 14px; }
-        th, td { padding: 12px; border-bottom: 1px solid var(--border); text-align: center; }
-        th { background-color: #f8f9fa; color: var(--text-muted); }
-        tr:last-child td { border-bottom: none; }
-        .delete-btn { color: #e74c3c; cursor: pointer; font-weight: bold; border: none; background: none; }
+        /* 모바일 가로 스크롤 대응 */
+        .table-scroll { overflow-x: auto; width: 100%; }
+        table { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 450px; }
+        th, td { padding: 14px 10px; border-bottom: 1px solid var(--border); text-align: center; }
+        th { background-color: #f8f9fa; color: var(--text-muted); font-weight: 600; }
+        .delete-btn { padding: 6px 10px; background-color: #ffecec; color: #e74c3c; border-radius: 5px; border: none; font-weight: bold; cursor: pointer; }
 
         /* 합계 요약 */
-        .summary { display: flex; justify-content: space-between; padding: 20px; background: #fff; border-radius: 8px; border: 1px solid var(--border); font-size: 16px; font-weight: bold; margin-top: 20px; box-shadow: 0 2px 5px rgba(0,0,0,0.02); }
-        .txt-income { color: var(--income); }
-        .txt-expense { color: var(--expense); }
-        .txt-total { color: var(--primary); font-size: 18px; }
+        .summary { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; padding: 20px; background: #fff; border-radius: 12px; border: 1px solid var(--border); margin-top: 20px; }
+        .summary div { text-align: center; font-size: 14px; color: var(--text-muted); }
+        .summary div span { display: block; font-size: 18px; font-weight: bold; margin-top: 5px; }
+        .summary .full-width { grid-column: span 2; border-top: 1px dashed var(--border); pt: 15px; margin-top: 10px; padding-top: 15px; }
+        .summary .full-width span { font-size: 22px; color: var(--primary); }
 
-        /* Data 창 스타일 */
-        .data-section { margin-bottom: 25px; }
-        .data-section h3 { margin-top: 0; color: var(--text-main); font-size: 16px; border-bottom: 2px solid var(--border); padding-bottom: 10px; display: flex; justify-content: space-between; }
-        .data-list { display: flex; flex-wrap: wrap; gap: 10px; list-style: none; padding: 0; margin: 0; }
-        .data-item { background-color: #f1f3f5; padding: 8px 12px; border-radius: 20px; font-size: 14px; display: flex; align-items: center; gap: 8px; border: 1px solid var(--border); }
-        .btn-action { background: none; border: none; cursor: pointer; font-size: 12px; padding: 2px; color: var(--text-muted); }
-        .btn-action:hover { color: var(--primary); }
-        .btn-add { background-color: var(--text-main); color: white; border: none; border-radius: 12px; padding: 4px 12px; font-size: 12px; cursor: pointer; }
+        /* 항목 관리 */
+        .data-section h3 { font-size: 18px; padding-bottom: 10px; border-bottom: 2px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
+        .data-list { display: flex; flex-wrap: wrap; gap: 10px; list-style: none; padding: 0; }
+        .data-item { background-color: #f1f3f5; padding: 10px 15px; border-radius: 25px; font-size: 15px; display: flex; align-items: center; gap: 10px; border: 1px solid var(--border); }
+        .btn-action { font-size: 16px; background: none; border: none; cursor: pointer; }
+        .btn-add { background-color: #333; color: white; border: none; border-radius: 8px; padding: 8px 12px; font-size: 13px; }
+
+        /* PC 버전 레이아웃 보정 */
+        @media (min-width: 600px) {
+            .input-row { flex-direction: row; }
+            .filter-section { flex-direction: row; justify-content: space-between; align-items: center; }
+            .filter-section input { width: auto; }
+            .summary { grid-template-columns: 1fr 1fr 1fr; }
+            .summary .full-width { grid-column: span 1; border-top: none; margin-top: 0; padding-top: 0; }
+        }
     </style>
     
     <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-app-compat.js"></script>
@@ -88,21 +100,20 @@
 
 <div class="container">
     <div class="header">
-        <h1>📊 나만의 스마트 가계부</h1>
+        <h1>📊 스마트 가계부</h1>
         <div class="file-controls">
-            <button class="btn-small btn-load" onclick="document.getElementById('fileInput').click()">📂 파일 백업 불러오기</button>
+            <button class="btn-small btn-load" onclick="document.getElementById('fileInput').click()">📂 백업 불러오기</button>
             <input type="file" id="fileInput" accept=".json" onchange="importData(event)">
-            <button class="btn-small btn-save" onclick="exportData()">💾 수동 파일 저장</button>
+            <button class="btn-small btn-save" onclick="exportData()">💾 수동 저장</button>
         </div>
     </div>
 
     <div class="tabs">
         <button class="tab-btn active" onclick="switchTab('inputTab', this)">입력 및 조회</button>
-        <button class="tab-btn" onclick="switchTab('dataTab', this)">항목 관리 (Data)</button>
+        <button class="tab-btn" onclick="switchTab('dataTab', this)">항목 관리</button>
     </div>
 
     <div id="inputTab" class="tab-content active">
-        
         <div class="input-card">
             <div class="radio-group">
                 <label class="txt-income"><input type="radio" name="type" value="income" onchange="updateCategoryOptions()"> 수입</label>
@@ -114,13 +125,13 @@
             </div>
             <div class="input-row">
                 <input type="text" id="detailInput" placeholder="세부 내용 (예: 점심 식사)">
-                <input type="text" id="amountInput" placeholder="금액 (숫자만 입력)" oninput="formatNumber(this)">
+                <input type="tel" id="amountInput" placeholder="금액 (숫자만 입력)" oninput="formatNumber(this)">
             </div>
             <button class="btn-submit" onclick="addEntry()">내역 추가하기</button>
         </div>
 
         <div class="filter-section">
-            <h3 style="margin: 0; color: var(--text-main);">월별 내역 조회</h3>
+            <h3>📅 월별 내역 조회</h3>
             <input type="month" id="searchMonth" onchange="renderTables()">
         </div>
 
@@ -130,12 +141,14 @@
                     <span>수입 내역</span>
                     <span id="subTotalIncome">0 원</span>
                 </div>
-                <table>
-                    <thead>
-                        <tr><th>날짜</th><th>항목</th><th>세부내용</th><th>금액</th><th>삭제</th></tr>
-                    </thead>
-                    <tbody id="incomeTableBody"></tbody>
-                </table>
+                <div class="table-scroll">
+                    <table>
+                        <thead>
+                            <tr><th>날짜</th><th>항목</th><th>내용</th><th>금액</th><th>삭제</th></tr>
+                        </thead>
+                        <tbody id="incomeTableBody"></tbody>
+                    </table>
+                </div>
             </div>
 
             <div class="table-wrapper">
@@ -143,34 +156,36 @@
                     <span>지출 내역</span>
                     <span id="subTotalExpense">0 원</span>
                 </div>
-                <table>
-                    <thead>
-                        <tr><th>날짜</th><th>항목</th><th>세부내용</th><th>금액</th><th>삭제</th></tr>
-                    </thead>
-                    <tbody id="expenseTableBody"></tbody>
-                </table>
+                <div class="table-scroll">
+                    <table>
+                        <thead>
+                            <tr><th>날짜</th><th>항목</th><th>내용</th><th>금액</th><th>삭제</th></tr>
+                        </thead>
+                        <tbody id="expenseTableBody"></tbody>
+                    </table>
+                </div>
             </div>
         </div>
 
         <div class="summary">
-            <div>총 수입: <span id="totalIncome" class="txt-income">0</span>원</div>
-            <div>총 지출: <span id="totalExpense" class="txt-expense">0</span>원</div>
-            <div>잔액: <span id="netTotal" class="txt-total">0</span>원</div>
+            <div>총 수입 <span id="totalIncome" class="txt-income">0</span></div>
+            <div>총 지출 <span id="totalExpense" class="txt-expense">0</span></div>
+            <div class="full-width">현재 잔액 <span id="netTotal" class="txt-total">0</span></div>
         </div>
     </div>
 
     <div id="dataTab" class="tab-content">
         <div class="data-section">
             <h3>
-                <span>🟢 수입 항목 관리</span>
-                <button class="btn-add" onclick="addCategory('income')">+ 새 항목 추가</button>
+                <span>🟢 수입 항목</span>
+                <button class="btn-add" onclick="addCategory('income')">+ 추가</button>
             </h3>
             <ul class="data-list" id="dataIncomeList"></ul>
         </div>
-        <div class="data-section" style="margin-top: 30px;">
+        <div class="data-section" style="margin-top: 35px;">
             <h3>
-                <span>🔴 지출 항목 관리</span>
-                <button class="btn-add" onclick="addCategory('expense')">+ 새 항목 추가</button>
+                <span>🔴 지출 항목</span>
+                <button class="btn-add" onclick="addCategory('expense')">+ 추가</button>
             </h3>
             <ul class="data-list" id="dataExpenseList"></ul>
         </div>
@@ -178,9 +193,7 @@
 </div>
 
 <script>
-    // =========================================================
-    // 🚨 [필수 설정] 파이어베이스 설정값을 여기에 꼭 붙여넣으세요! 🚨
-    // =========================================================
+    // 파이어베이스 설정 (사용자님의 기존 정보를 그대로 유지합니다)
     const firebaseConfig = {
         apiKey: "AIzaSyBJ71IhAdTuQ2msJR_28Fyo50Q7Map5u58",
         authDomain: "money-c34ec.firebaseapp.com",
@@ -190,60 +203,44 @@
         appId: "1:969800282507:web:c1fc6cdfd7417526e57f8e"
     };
 
-    // 파이어베이스 초기화 및 DB 연결
     firebase.initializeApp(firebaseConfig);
     const db = firebase.firestore();
 
-    // 기본 데이터 구조
     let categories = {
         income: ['급여', '용돈', '부수입', '상여금'],
         expense: ['식비', '교통비', '문화생활', '생필품', '주거/통신']
     };
     let entries = [];
 
-    // 초기 실행
     window.onload = function() {
         const today = new Date();
         document.getElementById('searchMonth').value = today.toISOString().slice(0, 7);
         document.getElementById('dateInput').value = today.toISOString().slice(0, 10);
-
-        // 클라우드에서 데이터 실시간 불러오기
         loadDataFromCloud();
     };
 
-    // 데이터베이스(클라우드)에 저장하는 함수
     function saveData() {
         db.collection("budget").doc("my_data").set({
             categories: categories,
             entries: entries
-        }).then(() => {
-            console.log("클라우드 자동 저장 완료!");
-        }).catch((error) => {
-            console.error("저장 실패: ", error);
-            alert("데이터 저장에 실패했습니다. 파이어베이스 설정을 확인해주세요.");
-        });
+        }).then(() => console.log("자동 저장 완료"));
     }
 
-    // 클라우드 실시간 동기화 함수
     function loadDataFromCloud() {
-        // onSnapshot을 통해 다른 기기에서 수정해도 즉시 화면에 반영됨
         db.collection("budget").doc("my_data").onSnapshot((doc) => {
             if (doc.exists) {
                 const data = doc.data();
                 categories = data.categories || categories;
                 entries = data.entries || [];
             } else {
-                // 처음 접속해서 데이터가 아예 없을 경우 기본값 세팅 후 클라우드에 저장
                 saveData();
             }
-            // 데이터 로드 후 화면 새로고침
             updateCategoryOptions();
             renderDataTab();
             renderTables();
         });
     }
 
-    // 탭 전환
     function switchTab(tabId, btnElement) {
         document.querySelectorAll('.tab-content').forEach(tab => tab.classList.remove('active'));
         document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
@@ -251,13 +248,11 @@
         btnElement.classList.add('active');
     }
 
-    // 숫자 콤마 포맷
     function formatNumber(input) {
         let value = input.value.replace(/[^0-9]/g, '');
         input.value = value === '' ? '' : Number(value).toLocaleString('ko-KR');
     }
 
-    // 카테고리 옵션 업데이트
     function updateCategoryOptions() {
         const type = document.querySelector('input[name="type"]:checked').value;
         const select = document.getElementById('categorySelect');
@@ -270,15 +265,14 @@
         });
     }
 
-    // -------- Data 창 관리 (CRUD) --------
     function renderDataTab() {
         const renderList = (type, elementId) => {
             const list = document.getElementById(elementId);
             list.innerHTML = categories[type].map((item, index) => `
                 <li class="data-item">
                     ${item}
-                    <button class="btn-action" onclick="editCategory('${type}', ${index})" title="수정">✏️</button>
-                    <button class="btn-action" onclick="deleteCategory('${type}', ${index})" title="삭제">❌</button>
+                    <button class="btn-action" onclick="editCategory('${type}', ${index})">✏️</button>
+                    <button class="btn-action" onclick="deleteCategory('${type}', ${index})">❌</button>
                 </li>
             `).join('');
         };
@@ -287,34 +281,32 @@
     }
 
     function addCategory(type) {
-        const newCat = prompt("새로운 항목 이름을 입력하세요:");
+        const newCat = prompt("새 항목 이름:");
         if (newCat && newCat.trim() !== '') {
             categories[type].push(newCat.trim());
-            saveData(); // 데이터 변경 시 클라우드 저장
+            saveData();
         }
     }
 
     function editCategory(type, index) {
         const oldCat = categories[type][index];
-        const newCat = prompt("수정할 항목 이름을 입력하세요:", oldCat);
+        const newCat = prompt("수정할 이름:", oldCat);
         if (newCat && newCat.trim() !== '' && newCat !== oldCat) {
-            // 기존 내역(entries)의 항목 이름도 같이 업데이트
             entries.forEach(entry => {
                 if(entry.type === type && entry.category === oldCat) entry.category = newCat.trim();
             });
             categories[type][index] = newCat.trim();
-            saveData(); // 데이터 변경 시 클라우드 저장
+            saveData();
         }
     }
 
     function deleteCategory(type, index) {
-        if (confirm(`'${categories[type][index]}' 항목을 정말 삭제하시겠습니까?`)) {
+        if (confirm(`'${categories[type][index]}' 항목을 삭제하시겠습니까?`)) {
             categories[type].splice(index, 1);
-            saveData(); // 데이터 변경 시 클라우드 저장
+            saveData();
         }
     }
 
-    // -------- 내역 관리 --------
     function addEntry() {
         const type = document.querySelector('input[name="type"]:checked').value;
         const date = document.getElementById('dateInput').value;
@@ -323,10 +315,10 @@
         const amountStr = document.getElementById('amountInput').value.replace(/,/g, '');
         const amount = Number(amountStr);
 
-        if (!date || !amountStr) return alert("날짜와 금액은 필수 입력 사항입니다.");
+        if (!date || !amountStr) return alert("날짜와 금액을 입력해주세요.");
 
         entries.push({ id: Date.now(), type, date, category, detail, amount });
-        saveData(); // 데이터 변경 시 클라우드 저장
+        saveData();
         
         document.getElementById('detailInput').value = '';
         document.getElementById('amountInput').value = '';
@@ -335,11 +327,10 @@
     function deleteEntry(id) {
         if (confirm("이 내역을 삭제하시겠습니까?")) {
             entries = entries.filter(entry => entry.id !== id);
-            saveData(); // 데이터 변경 시 클라우드 저장
+            saveData();
         }
     }
 
-    // 분리된 테이블 렌더링
     function renderTables() {
         const searchMonth = document.getElementById('searchMonth').value;
         const filtered = entries.filter(e => e.date.startsWith(searchMonth)).sort((a, b) => new Date(a.date) - new Date(b.date));
@@ -353,44 +344,33 @@
         filtered.forEach(entry => {
             const tr = document.createElement('tr');
             tr.innerHTML = `
-                <td>${entry.date}</td>
+                <td>${entry.date.slice(5)}</td>
                 <td>${entry.category}</td>
-                <td>${entry.detail}</td>
+                <td style="text-align:left;">${entry.detail}</td>
                 <td style="font-weight:bold;">${entry.amount.toLocaleString()}</td>
                 <td><button class="delete-btn" onclick="deleteEntry(${entry.id})">X</button></td>
             `;
-
-            if (entry.type === 'income') {
-                incBody.appendChild(tr);
-                totalInc += entry.amount;
-            } else {
-                expBody.appendChild(tr);
-                totalExp += entry.amount;
-            }
+            if (entry.type === 'income') { incBody.appendChild(tr); totalInc += entry.amount; } 
+            else { expBody.appendChild(tr); totalExp += entry.amount; }
         });
 
-        if(incBody.innerHTML === '') incBody.innerHTML = '<tr><td colspan="5">수입 내역이 없습니다.</td></tr>';
-        if(expBody.innerHTML === '') expBody.innerHTML = '<tr><td colspan="5">지출 내역이 없습니다.</td></tr>';
+        if(incBody.innerHTML === '') incBody.innerHTML = '<tr><td colspan="5">내역 없음</td></tr>';
+        if(expBody.innerHTML === '') expBody.innerHTML = '<tr><td colspan="5">내역 없음</td></tr>';
 
         document.getElementById('subTotalIncome').textContent = `${totalInc.toLocaleString()} 원`;
         document.getElementById('subTotalExpense').textContent = `${totalExp.toLocaleString()} 원`;
-        
-        document.getElementById('totalIncome').textContent = totalInc.toLocaleString();
-        document.getElementById('totalExpense').textContent = totalExp.toLocaleString();
-        document.getElementById('netTotal').textContent = (totalInc - totalExp).toLocaleString();
+        document.getElementById('totalIncome').textContent = totalInc.toLocaleString() + "원";
+        document.getElementById('totalExpense').textContent = totalExp.toLocaleString() + "원";
+        document.getElementById('netTotal').textContent = (totalInc - totalExp).toLocaleString() + "원";
     }
 
-    // -------- 수동 백업 기능 (선택 사항) --------
-    // 클라우드 서버에 문제가 생길 경우를 대비해 수동으로 백업받고 올리는 기능은 남겨두었습니다.
     function exportData() {
         const data = { categories, entries };
         const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
-        const url = URL.createObjectURL(blob);
         const a = document.createElement('a');
-        a.href = url;
-        a.download = `가계부백업_${new Date().toISOString().slice(0, 10)}.json`;
+        a.href = URL.createObjectURL(blob);
+        a.download = `가계부_${new Date().toISOString().slice(0, 10)}.json`;
         a.click();
-        URL.revokeObjectURL(url);
     }
 
     function importData(event) {
@@ -403,17 +383,12 @@
                 if (data.categories && data.entries) {
                     categories = data.categories;
                     entries = data.entries;
-                    saveData(); // 불러온 백업 데이터를 클라우드에 강제 덮어쓰기
-                    alert("백업 데이터를 서버에 성공적으로 복구했습니다!");
-                } else {
-                    alert("올바른 가계부 백업 파일이 아닙니다.");
+                    saveData();
+                    alert("성공적으로 복구되었습니다!");
                 }
-            } catch (err) {
-                alert("파일을 읽는 중 오류가 발생했습니다.");
-            }
+            } catch (err) { alert("파일 오류"); }
         };
         reader.readAsText(file);
-        event.target.value = '';
     }
 </script>
 
