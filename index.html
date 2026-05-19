@@ -279,7 +279,7 @@
         expense: ['식비', '교통비', '문화생활', '생필품', '주거/통신']
     };
     let entries = [];
-    let fixedEntries = []; // 고정 자금 저장 배열 추가
+    let fixedEntries = [];
     
     let expenseChartInstance = null;
     let incomeChartInstance = null;
@@ -296,7 +296,7 @@
     function syncMonths(selectedMonth) {
         document.getElementById('searchMonth').value = selectedMonth;
         document.getElementById('statsMonth').value = selectedMonth;
-        checkAndApplyFixedEntries(selectedMonth); // 월 변경 시 고정 자금 체크 및 주입
+        checkAndApplyFixedEntries(selectedMonth);
         renderTables();
         updateStatsTab();
     }
@@ -304,7 +304,7 @@
     function updateStatsTab() {
         renderCalendar();
         renderCharts();
-        renderComparisonComment(); // 전월 대비 패턴 멘트 업데이트
+        renderComparisonComment(); 
     }
 
     function saveData() {
@@ -325,7 +325,7 @@
             renderFixedTable();
             
             const currentMonth = document.getElementById('searchMonth').value;
-            checkAndApplyFixedEntries(currentMonth); // 클라우드 로드 후 자동 고정자금 주입
+            checkAndApplyFixedEntries(currentMonth);
             
             renderTables();
             updateStatsTab();
@@ -337,7 +337,6 @@
         let isUpdated = false;
         
         fixedEntries.forEach(fe => {
-            // 이번 달에 동일한 고정자금 고유태그(fixedId)를 가진 내역이 이미 들어있는지 판단
             const tag = `fixed-${fe.id}-${targetMonth}`;
             const exists = entries.some(e => e.fixedTag === tag);
             
@@ -350,7 +349,7 @@
                     category: fe.category,
                     detail: `[고정] ${fe.detail}`,
                     amount: fe.amount,
-                    fixedTag: tag // 중복 주입 방지 태그
+                    fixedTag: tag
                 });
                 isUpdated = true;
             }
@@ -426,7 +425,6 @@
         if (confirm(`'${categories[type][index]}' 삭제하시겠습니까?`)) { categories[type].splice(index, 1); saveData(); }
     }
 
-    // 고정 지출/수입 등록 로직
     function addFixedEntry() {
         const type = document.getElementById('fixedType').value;
         const day = parseInt(document.getElementById('fixedDay').value);
@@ -450,7 +448,7 @@
     }
 
     function deleteFixedEntry(id) {
-        if (confirm("이 고정 자금 설정을 삭제하시겠습니까? (이미 기존 가계부에 자동 등록된 내역은 유지됩니다)")) {
+        if (confirm("이 고정 자금 설정을 삭제하시겠습니까?")) {
             fixedEntries = fixedEntries.filter(fe => fe.id !== id);
             saveData();
         }
@@ -603,41 +601,66 @@
         incomeChartInstance = createChart('incomeChart', incData, '수입', incColors);
     }
 
-    // ✨ 소비 패턴 스마트 코멘트 생성 로직
+    // ✨ 항목별 분석 로직으로 개선된 스마트 코멘트
     function renderComparisonComment() {
         const targetMonth = document.getElementById('statsMonth').value;
         if (!targetMonth) return;
         
         const [year, month] = targetMonth.split('-').map(Number);
         
-        // 이전 달 계산 (1월일 경우 전년도 12월로 포맷)
+        // 이전 달 계산
         const prevYear = month === 1 ? year - 1 : year;
         const prevMonth = month === 1 ? 12 : month - 1;
         const prevMonthStr = `${prevYear}-${String(prevMonth).padStart(2, '0')}`;
         
-        // 현재 달과 이전 달의 지출 합산 계산
-        const currentExpense = entries.filter(e => e.date.startsWith(targetMonth) && e.type === 'expense').reduce((sum, e) => sum + e.amount, 0);
-        const prevExpense = entries.filter(e => e.date.startsWith(prevMonthStr) && e.type === 'expense').reduce((sum, e) => sum + e.amount, 0);
+        // 이번 달과 지난 달의 '지출' 내역만 필터링
+        const currentExpEntries = entries.filter(e => e.date.startsWith(targetMonth) && e.type === 'expense');
+        const prevExpEntries = entries.filter(e => e.date.startsWith(prevMonthStr) && e.type === 'expense');
         
         const commentBox = document.getElementById('comparisonComment');
         
-        if (currentExpense === 0 && prevExpense === 0) {
+        if (currentExpEntries.length === 0) {
             commentBox.className = "comment-box";
             commentBox.textContent = "💡 아직 이번 달 지출 내역이 없습니다. 소비를 기록해 보세요!";
             return;
         }
 
-        const difference = currentExpense - prevExpense;
+        // 항목별로 지출 합산
+        const currCatSums = {};
+        const prevCatSums = {};
+        
+        currentExpEntries.forEach(e => currCatSums[e.category] = (currCatSums[e.category] || 0) + e.amount);
+        prevExpEntries.forEach(e => prevCatSums[e.category] = (prevCatSums[e.category] || 0) + e.amount);
+        
+        // 지출이 늘어난 항목 찾기
+        const increasedCats = [];
+        
+        for (const cat in currCatSums) {
+            const currentAmt = currCatSums[cat];
+            const prevAmt = prevCatSums[cat] || 0; // 지난 달에 해당 항목 지출이 없었으면 0으로 계산
+            if (currentAmt > prevAmt) {
+                increasedCats.push({ category: cat, diff: currentAmt - prevAmt });
+            }
+        }
+        
+        // 지출 증가 폭이 큰 순서대로 정렬
+        increasedCats.sort((a, b) => b.diff - a.diff);
 
-        if (difference > 0) {
+        // UI 렌더링
+        if (increasedCats.length > 0) {
             commentBox.className = "comment-box warn";
-            commentBox.innerHTML = `🚨 <b>지출 경고!</b> 지난달(${prevMonth}월)보다 지출이 <b>${difference.toLocaleString()}원</b> 더 많습니다. 절약이 필요해요!`;
-        } else if (difference < 0) {
-            commentBox.className = "comment-box";
-            commentBox.innerHTML = `👏 <b>훌륭합니다!</b> 지난달(${prevMonth}월)보다 지출을 <b>${Math.abs(difference).toLocaleString()}원</b> 줄였습니다. 계속 유지하세요!`;
+            let html = `🚨 <b>지출 경고!</b> 지난달(${prevMonth}월)보다 지출이 늘어난 항목이 있습니다.<br>`;
+            html += `<div style="display: inline-block; text-align: left; margin-top: 10px; font-size: 14px;">`;
+            
+            increasedCats.forEach(item => {
+                html += `<div style="margin-bottom: 4px;">• <b>${item.category}</b> : <span class="txt-expense">+${item.diff.toLocaleString()}원</span></div>`;
+            });
+            
+            html += `</div>`;
+            commentBox.innerHTML = html;
         } else {
             commentBox.className = "comment-box";
-            commentBox.innerHTML = `⚖️ 지난달(${prevMonth}월)과 지출 규모가 똑같습니다! 안정적인 소비 패턴을 유지 중입니다.`;
+            commentBox.innerHTML = `👏 <b>훌륭합니다!</b> 지난달(${prevMonth}월) 대비 지출이 증가한 항목이 하나도 없습니다. 완벽한 지출 방어!`;
         }
     }
 
