@@ -4,6 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>나만의 스마트 가계부</title>
+    
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
     <style>
         :root {
             --primary: #4a90e2;
@@ -20,7 +23,6 @@
         body { font-family: 'Pretendard', 'Malgun Gothic', sans-serif; background-color: var(--bg-color); margin: 0; padding: 15px; color: var(--text-main); line-height: 1.5; }
         .container { max-width: 800px; margin: 0 auto; background: var(--card-bg); border-radius: 16px; box-shadow: 0 10px 25px rgba(0,0,0,0.1); overflow: hidden; }
         
-        /* 헤더 */
         .header { padding: 20px; background-color: #fafbfc; border-bottom: 1px solid var(--border); }
         .header h1 { margin: 0 0 15px 0; font-size: 22px; color: var(--primary); text-align: center; }
         .file-controls { display: flex; gap: 8px; justify-content: center; }
@@ -29,67 +31,61 @@
         .btn-load { background-color: #f1f3f5; color: var(--text-main); border: 1px solid #ced4da; }
         input[type="file"] { display: none; }
 
-        /* 탭 스타일 */
         .tabs { display: flex; background-color: #f8f9fa; border-bottom: 1px solid var(--border); }
-        .tab-btn { flex: 1; padding: 18px; border: none; background: none; cursor: pointer; font-size: 16px; font-weight: bold; color: var(--text-muted); }
+        .tab-btn { flex: 1; padding: 16px 5px; border: none; background: none; cursor: pointer; font-size: 15px; font-weight: bold; color: var(--text-muted); }
         .tab-btn.active { background-color: white; color: var(--primary); border-bottom: 3px solid var(--primary); }
 
         .tab-content { display: none; padding: 20px; }
         .tab-content.active { display: block; }
 
-        /* 입력 폼 */
         .input-card { background: #f8f9fa; padding: 20px; border-radius: 12px; margin-bottom: 25px; border: 1px solid var(--border); }
         .radio-group { margin-bottom: 20px; display: flex; justify-content: center; gap: 30px; }
         .radio-group label { font-size: 18px; font-weight: bold; cursor: pointer; display: flex; align-items: center; gap: 8px; }
         .radio-group input { width: 20px; height: 20px; }
         
         .input-row { display: flex; flex-direction: column; gap: 12px; margin-bottom: 12px; }
-        .input-row input, .input-row select { 
-            width: 100%; padding: 15px; border: 1px solid var(--border); border-radius: 10px; font-size: 16px; box-sizing: border-box; 
-            background-color: white;
-        }
-        .btn-submit { width: 100%; padding: 16px; background-color: var(--primary); color: white; border: none; border-radius: 10px; font-size: 18px; font-weight: bold; cursor: pointer; transition: 0.2s; margin-top: 10px; }
+        .input-row input, .input-row select { width: 100%; padding: 15px; border: 1px solid var(--border); border-radius: 10px; font-size: 16px; box-sizing: border-box; background-color: white; }
+        .btn-submit { width: 100%; padding: 16px; background-color: var(--primary); color: white; border: none; border-radius: 10px; font-size: 18px; font-weight: bold; cursor: pointer; margin-top: 10px; }
 
-        /* 조회 영역 */
-        .filter-section { display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px; padding: 0 5px; }
+        /* 필터 섹션 강화 */
+        .filter-section { display: flex; flex-direction: column; gap: 12px; margin-bottom: 20px; }
         .filter-section h3 { margin: 0; font-size: 18px; }
-        .filter-section input { padding: 12px; border: 1px solid var(--border); border-radius: 8px; font-size: 16px; width: 100%; box-sizing: border-box; }
-        
-        /* 테이블 영역 */
-        .tables-container { display: flex; flex-direction: column; gap: 25px; }
-        .table-wrapper { border: 1px solid var(--border); border-radius: 10px; overflow: hidden; }
+        .filter-controls-row { display: flex; gap: 10px; flex-wrap: wrap; }
+        .filter-controls-row input { padding: 12px; border: 1px solid var(--border); border-radius: 8px; font-size: 16px; box-sizing: border-box; flex: 1; min-width: 140px; }
+        #searchInput { background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="gray" viewBox="0 0 16 16"><path d="M11.742 10.344a6.5 6.5 0 1 0-1.397 1.398h-.001c.03.04.062.078.098.115l3.85 3.85a1 1 0 0 0 1.415-1.414l-3.85-3.85a1.007 1.007 0 0 0-.115-.1zM12 6.5a5.5 5.5 0 1 1-11 0 5.5 5.5 0 0 1 11 0z"/></svg>'); background-repeat: no-repeat; background-position: 12px center; padding-left: 35px; }
+
+        .table-wrapper { border: 1px solid var(--border); border-radius: 10px; overflow: hidden; margin-bottom: 25px; }
         .table-header { padding: 15px; font-weight: bold; font-size: 16px; color: white; display: flex; justify-content: space-between; }
         .bg-income { background-color: var(--income); }
         .bg-expense { background-color: var(--expense); }
-        
-        /* 모바일 가로 스크롤 대응 */
         .table-scroll { overflow-x: auto; width: 100%; }
         table { width: 100%; border-collapse: collapse; font-size: 14px; min-width: 450px; }
         th, td { padding: 14px 10px; border-bottom: 1px solid var(--border); text-align: center; }
         th { background-color: #f8f9fa; color: var(--text-muted); font-weight: 600; }
         .delete-btn { padding: 6px 10px; background-color: #ffecec; color: #e74c3c; border-radius: 5px; border: none; font-weight: bold; cursor: pointer; }
 
-        /* 합계 요약 */
         .summary { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; padding: 20px; background: #fff; border-radius: 12px; border: 1px solid var(--border); margin-top: 20px; }
         .summary div { text-align: center; font-size: 14px; color: var(--text-muted); }
         .summary div span { display: block; font-size: 18px; font-weight: bold; margin-top: 5px; }
-        .summary .full-width { grid-column: span 2; border-top: 1px dashed var(--border); pt: 15px; margin-top: 10px; padding-top: 15px; }
+        .summary .full-width { grid-column: span 2; border-top: 1px dashed var(--border); padding-top: 15px; margin-top: 10px; }
         .summary .full-width span { font-size: 22px; color: var(--primary); }
 
-        /* 항목 관리 */
-        .data-section h3 { font-size: 18px; padding-bottom: 10px; border-bottom: 2px solid var(--border); display: flex; justify-content: space-between; align-items: center; }
-        .data-list { display: flex; flex-wrap: wrap; gap: 10px; list-style: none; padding: 0; }
+        .chart-container { background: #f8f9fa; padding: 20px; border-radius: 12px; border: 1px solid var(--border); margin-bottom: 20px; }
+        .chart-container h4 { margin: 0 0 15px 0; text-align: center; font-size: 18px; color: var(--text-main); }
+        .chart-box { position: relative; height: 300px; width: 100%; display: flex; justify-content: center; }
+        .no-data-msg { text-align: center; padding: 50px 0; color: var(--text-muted); font-size: 15px; }
+
+        .data-section h3 { font-size: 18px; padding-bottom: 10px; border-bottom: 2px solid var(--border); display: flex; justify-content: space-between; align-items: center; margin-top: 0; }
+        .data-list { display: flex; flex-wrap: wrap; gap: 10px; list-style: none; padding: 0; margin: 0;}
         .data-item { background-color: #f1f3f5; padding: 10px 15px; border-radius: 25px; font-size: 15px; display: flex; align-items: center; gap: 10px; border: 1px solid var(--border); }
         .btn-action { font-size: 16px; background: none; border: none; cursor: pointer; }
         .btn-add { background-color: #333; color: white; border: none; border-radius: 8px; padding: 8px 12px; font-size: 13px; }
 
-        /* PC 버전 레이아웃 보정 */
         @media (min-width: 600px) {
             .input-row { flex-direction: row; }
-            .filter-section { flex-direction: row; justify-content: space-between; align-items: center; }
-            .filter-section input { width: auto; }
             .summary { grid-template-columns: 1fr 1fr 1fr; }
             .summary .full-width { grid-column: span 1; border-top: none; margin-top: 0; padding-top: 0; }
+            .filter-controls-row { flex-wrap: nowrap; }
         }
     </style>
     
@@ -109,8 +105,9 @@
     </div>
 
     <div class="tabs">
-        <button class="tab-btn active" onclick="switchTab('inputTab', this)">입력 및 조회</button>
-        <button class="tab-btn" onclick="switchTab('dataTab', this)">항목 관리</button>
+        <button class="tab-btn active" onclick="switchTab('inputTab', this)">내역 관리</button>
+        <button class="tab-btn" onclick="switchTab('statsTab', this)">월별 통계</button>
+        <button class="tab-btn" onclick="switchTab('dataTab', this)">항목 설정</button>
     </div>
 
     <div id="inputTab" class="tab-content active">
@@ -131,11 +128,20 @@
         </div>
 
         <div class="filter-section">
-            <h3>📅 월별 내역 조회</h3>
-            <input type="month" id="searchMonth" onchange="renderTables()">
+            <h3>📅 내역 필터링</h3>
+            <div class="filter-controls-row">
+                <input type="month" id="searchMonth" onchange="syncMonths(this.value)">
+                <input type="text" id="searchInput" placeholder="검색어 입력..." oninput="renderTables()">
+            </div>
         </div>
 
-        <div class="tables-container">
+        <div class="summary">
+            <div>총 수입 <span id="totalIncome" class="txt-income">0</span></div>
+            <div>총 지출 <span id="totalExpense" class="txt-expense">0</span></div>
+            <div class="full-width">현재 잔액 <span id="netTotal" class="txt-total">0</span></div>
+        </div>
+
+        <div class="tables-container" style="margin-top: 25px;">
             <div class="table-wrapper">
                 <div class="table-header bg-income">
                     <span>수입 내역</span>
@@ -166,34 +172,37 @@
                 </div>
             </div>
         </div>
+    </div>
 
-        <div class="summary">
-            <div>총 수입 <span id="totalIncome" class="txt-income">0</span></div>
-            <div>총 지출 <span id="totalExpense" class="txt-expense">0</span></div>
-            <div class="full-width">현재 잔액 <span id="netTotal" class="txt-total">0</span></div>
+    <div id="statsTab" class="tab-content">
+        <div class="filter-section">
+            <h3>📅 통계 조회 월</h3>
+            <input type="month" id="statsMonth" onchange="syncMonths(this.value)">
+        </div>
+        <div class="chart-container">
+            <h4>🔴 지출 비율</h4>
+            <div id="expenseChartBox" class="chart-box"><canvas id="expenseChart"></canvas></div>
+        </div>
+        <div class="chart-container">
+            <h4>🟢 수입 비율</h4>
+            <div id="incomeChartBox" class="chart-box"><canvas id="incomeChart"></canvas></div>
         </div>
     </div>
 
     <div id="dataTab" class="tab-content">
         <div class="data-section">
-            <h3>
-                <span>🟢 수입 항목</span>
-                <button class="btn-add" onclick="addCategory('income')">+ 추가</button>
-            </h3>
+            <h3><span>🟢 수입 항목</span><button class="btn-add" onclick="addCategory('income')">+ 추가</button></h3>
             <ul class="data-list" id="dataIncomeList"></ul>
         </div>
         <div class="data-section" style="margin-top: 35px;">
-            <h3>
-                <span>🔴 지출 항목</span>
-                <button class="btn-add" onclick="addCategory('expense')">+ 추가</button>
-            </h3>
+            <h3><span>🔴 지출 항목</span><button class="btn-add" onclick="addCategory('expense')">+ 추가</button></h3>
             <ul class="data-list" id="dataExpenseList"></ul>
         </div>
     </div>
 </div>
 
 <script>
-    // 파이어베이스 설정 (사용자님의 기존 정보를 그대로 유지합니다)
+    // 파이어베이스 설정 유지
     const firebaseConfig = {
         apiKey: "AIzaSyBJ71IhAdTuQ2msJR_28Fyo50Q7Map5u58",
         authDomain: "money-c34ec.firebaseapp.com",
@@ -211,19 +220,27 @@
         expense: ['식비', '교통비', '문화생활', '생필품', '주거/통신']
     };
     let entries = [];
+    let expenseChartInstance = null;
+    let incomeChartInstance = null;
 
     window.onload = function() {
         const today = new Date();
-        document.getElementById('searchMonth').value = today.toISOString().slice(0, 7);
+        const currentMonth = today.toISOString().slice(0, 7);
+        document.getElementById('searchMonth').value = currentMonth;
+        document.getElementById('statsMonth').value = currentMonth;
         document.getElementById('dateInput').value = today.toISOString().slice(0, 10);
         loadDataFromCloud();
     };
 
+    function syncMonths(selectedMonth) {
+        document.getElementById('searchMonth').value = selectedMonth;
+        document.getElementById('statsMonth').value = selectedMonth;
+        renderTables();
+        renderCharts();
+    }
+
     function saveData() {
-        db.collection("budget").doc("my_data").set({
-            categories: categories,
-            entries: entries
-        }).then(() => console.log("자동 저장 완료"));
+        db.collection("budget").doc("my_data").set({ categories, entries });
     }
 
     function loadDataFromCloud() {
@@ -232,12 +249,11 @@
                 const data = doc.data();
                 categories = data.categories || categories;
                 entries = data.entries || [];
-            } else {
-                saveData();
-            }
+            } else { saveData(); }
             updateCategoryOptions();
             renderDataTab();
             renderTables();
+            renderCharts();
         });
     }
 
@@ -246,6 +262,7 @@
         document.querySelectorAll('.tab-btn').forEach(btn => btn.classList.remove('active'));
         document.getElementById(tabId).classList.add('active');
         btnElement.classList.add('active');
+        if(tabId === 'statsTab') renderCharts();
     }
 
     function formatNumber(input) {
@@ -259,8 +276,7 @@
         select.innerHTML = '';
         categories[type].forEach(cat => {
             const option = document.createElement('option');
-            option.value = cat;
-            option.textContent = cat;
+            option.value = cat; option.textContent = cat;
             select.appendChild(option);
         });
     }
@@ -269,42 +285,30 @@
         const renderList = (type, elementId) => {
             const list = document.getElementById(elementId);
             list.innerHTML = categories[type].map((item, index) => `
-                <li class="data-item">
-                    ${item}
+                <li class="data-item">${item}
                     <button class="btn-action" onclick="editCategory('${type}', ${index})">✏️</button>
                     <button class="btn-action" onclick="deleteCategory('${type}', ${index})">❌</button>
-                </li>
-            `).join('');
+                </li>`).join('');
         };
-        renderList('income', 'dataIncomeList');
-        renderList('expense', 'dataExpenseList');
+        renderList('income', 'dataIncomeList'); renderList('expense', 'dataExpenseList');
     }
 
     function addCategory(type) {
         const newCat = prompt("새 항목 이름:");
-        if (newCat && newCat.trim() !== '') {
-            categories[type].push(newCat.trim());
-            saveData();
-        }
+        if (newCat && newCat.trim() !== '') { categories[type].push(newCat.trim()); saveData(); }
     }
 
     function editCategory(type, index) {
         const oldCat = categories[type][index];
         const newCat = prompt("수정할 이름:", oldCat);
         if (newCat && newCat.trim() !== '' && newCat !== oldCat) {
-            entries.forEach(entry => {
-                if(entry.type === type && entry.category === oldCat) entry.category = newCat.trim();
-            });
-            categories[type][index] = newCat.trim();
-            saveData();
+            entries.forEach(entry => { if(entry.type === type && entry.category === oldCat) entry.category = newCat.trim(); });
+            categories[type][index] = newCat.trim(); saveData();
         }
     }
 
     function deleteCategory(type, index) {
-        if (confirm(`'${categories[type][index]}' 항목을 삭제하시겠습니까?`)) {
-            categories[type].splice(index, 1);
-            saveData();
-        }
+        if (confirm(`'${categories[type][index]}' 삭제하시겠습니까?`)) { categories[type].splice(index, 1); saveData(); }
     }
 
     function addEntry() {
@@ -314,31 +318,29 @@
         const detail = document.getElementById('detailInput').value;
         const amountStr = document.getElementById('amountInput').value.replace(/,/g, '');
         const amount = Number(amountStr);
-
         if (!date || !amountStr) return alert("날짜와 금액을 입력해주세요.");
-
         entries.push({ id: Date.now(), type, date, category, detail, amount });
         saveData();
-        
-        document.getElementById('detailInput').value = '';
-        document.getElementById('amountInput').value = '';
+        document.getElementById('detailInput').value = ''; document.getElementById('amountInput').value = '';
     }
 
-    function deleteEntry(id) {
-        if (confirm("이 내역을 삭제하시겠습니까?")) {
-            entries = entries.filter(entry => entry.id !== id);
-            saveData();
-        }
-    }
+    function deleteEntry(id) { if (confirm("삭제하시겠습니까?")) { entries = entries.filter(entry => entry.id !== id); saveData(); } }
 
+    // 🔍 핵심: 검색 로직이 포함된 렌더링 함수
     function renderTables() {
         const searchMonth = document.getElementById('searchMonth').value;
-        const filtered = entries.filter(e => e.date.startsWith(searchMonth)).sort((a, b) => new Date(a.date) - new Date(b.date));
+        const keyword = document.getElementById('searchInput').value.toLowerCase().trim();
+        
+        // 월 필터 + 키워드 필터 동시 적용
+        const filtered = entries.filter(e => {
+            const matchesMonth = e.date.startsWith(searchMonth);
+            const matchesKeyword = e.detail.toLowerCase().includes(keyword) || e.category.toLowerCase().includes(keyword);
+            return matchesMonth && matchesKeyword;
+        }).sort((a, b) => new Date(a.date) - new Date(b.date));
 
         const incBody = document.getElementById('incomeTableBody');
         const expBody = document.getElementById('expenseTableBody');
         incBody.innerHTML = ''; expBody.innerHTML = '';
-        
         let totalInc = 0, totalExp = 0;
 
         filtered.forEach(entry => {
@@ -364,6 +366,34 @@
         document.getElementById('netTotal').textContent = (totalInc - totalExp).toLocaleString() + "원";
     }
 
+    function renderCharts() {
+        const targetMonth = document.getElementById('statsMonth').value;
+        const filtered = entries.filter(e => e.date.startsWith(targetMonth));
+        const expData = {}; const incData = {};
+        filtered.forEach(e => {
+            if (e.type === 'expense') expData[e.category] = (expData[e.category] || 0) + e.amount;
+            else incData[e.category] = (incData[e.category] || 0) + e.amount;
+        });
+        const colors = ['#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF', '#FF9F40', '#FFCD56', '#C9CBCF', '#4BC0C0'];
+        if (expenseChartInstance) expenseChartInstance.destroy();
+        if (incomeChartInstance) incomeChartInstance.destroy();
+
+        const createChart = (ctxId, dataObj, title) => {
+            const ctx = document.getElementById(ctxId);
+            if(Object.keys(dataObj).length === 0) {
+                ctx.parentElement.innerHTML = `<div class="no-data-msg">${title} 내역이 없습니다.</div>`;
+                return null;
+            }
+            return new Chart(ctx, {
+                type: 'doughnut',
+                data: { labels: Object.keys(dataObj), datasets: [{ data: Object.values(dataObj), backgroundColor: colors }] },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } }
+            });
+        };
+        expenseChartInstance = createChart('expenseChart', expData, '지출');
+        incomeChartInstance = createChart('incomeChart', incData, '수입');
+    }
+
     function exportData() {
         const data = { categories, entries };
         const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
@@ -380,12 +410,7 @@
         reader.onload = function(e) {
             try {
                 const data = JSON.parse(e.target.result);
-                if (data.categories && data.entries) {
-                    categories = data.categories;
-                    entries = data.entries;
-                    saveData();
-                    alert("성공적으로 복구되었습니다!");
-                }
+                if (data.categories && data.entries) { categories = data.categories; entries = data.entries; saveData(); alert("복구 완료!"); }
             } catch (err) { alert("파일 오류"); }
         };
         reader.readAsText(file);
