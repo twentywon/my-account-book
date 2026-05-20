@@ -13,7 +13,7 @@
     <style>
         :root {
             --primary: #4f46e5; --primary-hover: #4338ca;
-            --income: #3b82f6; --expense: #ef4444;
+            --income: #3b82f6; --expense: #ef4444; --date-color: #ec4899;
             --bg-color: #f3f4f6; --card-bg: #ffffff;
             --text-main: #1f2937; --text-muted: #6b7280; --border: #e5e7eb;
         }
@@ -42,10 +42,14 @@
         .radio-group input { width: 20px; height: 20px; }
         .txt-income { color: var(--income); }
         .txt-expense { color: var(--expense); }
+        .txt-date { color: var(--date-color); }
         
         .input-row { display: flex; flex-direction: column; gap: 12px; margin-bottom: 12px; }
         .input-row input, .input-row select { width: 100%; padding: 15px; border: 1px solid var(--border); border-radius: 10px; font-size: 16px; box-sizing: border-box; background-color: white; }
         
+        .date-check-wrapper { display: flex; align-items: center; justify-content: flex-end; padding-right: 5px; }
+        .date-check-wrapper label { cursor: pointer; font-weight: bold; font-size: 14px; color: var(--date-color); display: flex; align-items: center; gap: 5px; }
+
         .btn-submit { width: 100%; padding: 16px; background-color: var(--primary); color: white; border: none; border-radius: 10px; font-size: 18px; font-weight: bold; cursor: pointer; transition: background-color 0.2s;}
 
         .filter-section { display: flex; flex-direction: column; gap: 12px; margin-bottom: 20px; }
@@ -74,7 +78,8 @@
         .save-inline-btn { padding: 6px 10px; background-color: #10b981; color: white; border-radius: 5px; border: none; font-weight: bold; cursor: pointer; }
         .cancel-inline-btn { padding: 6px 10px; background-color: #9ca3af; color: white; border-radius: 5px; border: none; font-weight: bold; cursor: pointer; }
         
-        .inline-input { width: 100%; padding: 6px; box-sizing: border-box; border: 1px solid var(--primary); border-radius: 4px; font-size: 13px; }
+        .inline-input { width: 100%; padding: 6px; box-sizing: border-box; border: 1px solid var(--primary); border-radius: 4px; font-size: 13px; margin-bottom: 4px; }
+        .date-badge { font-size: 11px; color: var(--date-color); background: #fdf2f8; padding: 2px 6px; border-radius: 4px; margin-left: 5px; border: 1px solid #fbcfe8; display: inline-block; }
 
         .summary { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; padding: 20px; background: #fff; border-radius: 12px; border: 1px solid var(--border); margin-top: 20px; }
         .summary div { text-align: center; font-size: 14px; color: var(--text-muted); }
@@ -145,8 +150,8 @@
 
         @media (min-width: 600px) {
             .input-row { flex-direction: row; }
-            .summary { grid-template-columns: 1fr 1fr 1fr; }
-            .summary .full-width { grid-column: span 1; border-top: none; margin-top: 0; padding-top: 0; }
+            .summary { grid-template-columns: 1fr 1fr 1fr 1fr; }
+            .summary .full-width { grid-column: span 4; border-top: 1px dashed var(--border); margin-top: 10px; padding-top: 15px; }
             .filter-controls-row { flex-wrap: nowrap; }
             .cal-day { min-height: 80px; padding: 8px; }
             .cal-date { font-size: 14px; }
@@ -184,10 +189,13 @@
                 <select id="categorySelect"></select>
             </div>
             <div class="input-row">
-                <input type="text" id="detailInput" placeholder="세부 내용 (예: 점심 식사)">
-                <input type="tel" id="amountInput" placeholder="금액 (숫자만 입력)" oninput="formatNumber(this)">
+                <input type="text" id="detailInput" placeholder="세부 내용 (예: 점심 식사)" onkeypress="if(event.key === 'Enter') addNewEntry()">
+                <input type="tel" id="amountInput" placeholder="금액 (숫자만 입력)" oninput="formatNumber(this)" onkeypress="if(event.key === 'Enter') addNewEntry()">
             </div>
-            <button class="btn-submit" onclick="addNewEntry()">내역 추가하기</button>
+            <div class="date-check-wrapper" id="dateCheckRow">
+                <label><input type="checkbox" id="isDateCheck"> 💖 데이트 비용</label>
+            </div>
+            <button class="btn-submit" onclick="addNewEntry()" style="margin-top: 15px;">내역 추가하기</button>
         </div>
 
         <div class="filter-section">
@@ -201,7 +209,8 @@
         <div class="summary">
             <div>총 수입 <span id="totalIncome" class="txt-income">0</span></div>
             <div>총 지출 <span id="totalExpense" class="txt-expense">0</span></div>
-            <div class="full-width">현재 잔액 <span id="netTotal">0</span></div>
+            <div>데이트 총액 <span id="totalDate" class="txt-date">0</span></div>
+            <div class="full-width" style="grid-column: span 1;">현재 잔액 <span id="netTotal">0</span></div>
         </div>
 
         <div class="tables-container" style="margin-top: 25px;">
@@ -335,7 +344,7 @@
 </div>
 
 <script>
-    // Firebase 연결 (본인 계정 정보)
+    // Firebase 연결
     const firebaseConfig = {
         apiKey: "AIzaSyBJ71IhAdTuQ2msJR_28Fyo50Q7Map5u58",
         authDomain: "money-c34ec.firebaseapp.com",
@@ -355,14 +364,12 @@
     let entries = [];
     let fixedEntries = [];
     
-    // 테이블 정렬 및 인라인 수정 상태 변수
     let sortConfig = { key: 'date', direction: 'desc' };
     let inlineEditingId = null;
 
     let expenseChartInstance = null;
     let incomeChartInstance = null;
     
-    // 구분이 명확한 차트 다색 팔레트 적용
     const chartColorPalette = [
         '#ef4444', '#3b82f6', '#10b981', '#f59e0b', '#8b5cf6', 
         '#06b6d4', '#ec4899', '#84cc16', '#6366f1', '#f97316'
@@ -420,7 +427,6 @@
         
         fixedEntries.push({ id: Date.now(), type, day, category, detail, amount });
         
-        // Firebase 저장 전 즉각 UI 렌더링으로 딜레이 방지
         renderFixedTable();
         const currentMonth = document.getElementById('searchMonth').value;
         checkAndApplyFixedEntries(currentMonth); 
@@ -435,7 +441,7 @@
     function deleteFixedEntry(id) {
         if (confirm("이 고정 설정을 삭제하시겠습니까?")) {
             fixedEntries = fixedEntries.filter(fe => fe.id !== id);
-            renderFixedTable(); // 즉시 UI 반영
+            renderFixedTable();
             saveData();
         }
     }
@@ -472,14 +478,14 @@
                 const dateStr = `${targetMonth}-${String(fe.day).padStart(2, '0')}`;
                 entries.push({
                     id: Date.now() + Math.random(), type: fe.type, date: dateStr, category: fe.category,
-                    detail: `[고정] ${fe.detail}`, amount: fe.amount, fixedTag: tag
+                    detail: `[고정] ${fe.detail}`, amount: fe.amount, fixedTag: tag, isDate: false
                 });
                 isUpdated = true;
             }
         });
         
         if (isUpdated) {
-            renderTables(); // 메인 내역 관리 탭 즉시 렌더링
+            renderTables();
             updateStatsTab(); 
             saveData();
         }
@@ -521,6 +527,9 @@
         const type = document.querySelector('input[name="type"]:checked').value;
         const select = document.getElementById('categorySelect');
         select.innerHTML = categories[type].map(cat => `<option value="${cat}">${cat}</option>`).join('');
+        
+        // 지출일 때만 데이트 체크박스 표시
+        document.getElementById('dateCheckRow').style.display = type === 'expense' ? 'flex' : 'none';
     }
 
     function renderDataTab() {
@@ -561,23 +570,27 @@
         const category = document.getElementById('categorySelect').value;
         const detail = document.getElementById('detailInput').value;
         const amount = Number(document.getElementById('amountInput').value.replace(/,/g, ''));
+        const isDate = type === 'expense' ? document.getElementById('isDateCheck').checked : false;
         
         if (!date || !amount) return alert("날짜와 금액을 입력해주세요.");
         
-        entries.push({ id: Date.now(), type, date, category, detail, amount });
+        entries.push({ id: Date.now(), type, date, category, detail, amount, isDate });
         
-        renderTables(); // 즉시 화면 갱신
+        renderTables();
         updateStatsTab();
         
         document.getElementById('detailInput').value = ''; 
         document.getElementById('amountInput').value = '';
+        document.getElementById('isDateCheck').checked = false; // 초기화
+        document.getElementById('detailInput').focus(); // 입력 후 포커스 유지
+        
         saveData();
     }
 
     function deleteEntry(id) { 
         if (confirm("이 내역을 삭제할까요?")) { 
             entries = entries.filter(e => e.id !== id); 
-            renderTables(); // 즉시 화면 갱신
+            renderTables();
             updateStatsTab();
             saveData(); 
         } 
@@ -599,17 +612,17 @@
         const category = document.getElementById(`edit_cat_${id}`).value;
         const detail = document.getElementById(`edit_detail_${id}`).value;
         const amount = Number(document.getElementById(`edit_amt_${id}`).value);
+        const isDate = type === 'expense' && document.getElementById(`edit_isDate_${id}`) ? document.getElementById(`edit_isDate_${id}`).checked : false;
 
         if (!date || !amount) return alert("날짜와 금액은 필수입니다.");
 
         const index = entries.findIndex(e => e.id === id);
         if (index > -1) {
-            entries[index] = { ...entries[index], date, category, detail, amount };
+            entries[index] = { ...entries[index], date, category, detail, amount, isDate };
             inlineEditingId = null;
             
-            renderTables(); // 즉각 렌더링
+            renderTables();
             updateStatsTab();
-            
             saveData();
         }
     }
@@ -636,17 +649,22 @@
         const incBody = document.getElementById('incomeTableBody');
         const expBody = document.getElementById('expenseTableBody');
         incBody.innerHTML = ''; expBody.innerHTML = '';
-        let totalInc = 0, totalExp = 0;
+        let totalInc = 0, totalExp = 0, totalDate = 0;
 
         filtered.forEach(entry => {
             const tr = document.createElement('tr');
             
             if (entry.id === inlineEditingId) {
                 const catOptions = categories[entry.type].map(c => `<option value="${c}" ${c===entry.category?'selected':''}>${c}</option>`).join('');
+                const dateEditHtml = entry.type === 'expense' ? `<div><label style="font-size:11px; cursor:pointer; color:var(--date-color);"><input type="checkbox" id="edit_isDate_${entry.id}" ${entry.isDate ? 'checked' : ''}> 데이트</label></div>` : '';
+                
                 tr.innerHTML = `
                     <td><input type="date" id="edit_date_${entry.id}" class="inline-input" value="${entry.date}"></td>
                     <td><select id="edit_cat_${entry.id}" class="inline-input">${catOptions}</select></td>
-                    <td><input type="text" id="edit_detail_${entry.id}" class="inline-input" value="${entry.detail}"></td>
+                    <td style="text-align:left;">
+                        <input type="text" id="edit_detail_${entry.id}" class="inline-input" value="${entry.detail}">
+                        ${dateEditHtml}
+                    </td>
                     <td><input type="number" id="edit_amt_${entry.id}" class="inline-input" value="${entry.amount}"></td>
                     <td class="action-btns">
                         <button class="save-inline-btn" onclick="saveInlineEdit(${entry.id}, '${entry.type}')">저장</button>
@@ -654,10 +672,11 @@
                     </td>
                 `;
             } else {
+                const dateBadge = entry.isDate ? '<span class="date-badge">💖 데이트</span>' : '';
                 tr.innerHTML = `
                     <td>${entry.date.slice(5)}</td>
                     <td>${entry.category}</td>
-                    <td style="text-align:left;">${entry.detail}</td>
+                    <td style="text-align:left;">${entry.detail} ${dateBadge}</td>
                     <td style="font-weight:bold;">${entry.amount.toLocaleString()}</td>
                     <td class="action-btns">
                         <button class="edit-btn" onclick="startInlineEdit(${entry.id})">수정</button>
@@ -666,8 +685,14 @@
                 `;
             }
 
-            if (entry.type === 'income') { incBody.appendChild(tr); totalInc += entry.amount; } 
-            else { expBody.appendChild(tr); totalExp += entry.amount; }
+            if (entry.type === 'income') { 
+                incBody.appendChild(tr); 
+                totalInc += entry.amount; 
+            } else { 
+                expBody.appendChild(tr); 
+                totalExp += entry.amount; 
+                if(entry.isDate) totalDate += entry.amount;
+            }
         });
 
         if(incBody.innerHTML === '') incBody.innerHTML = '<tr><td colspan="5">내역 없음</td></tr>';
@@ -677,6 +702,7 @@
         document.getElementById('subTotalExpense').textContent = `${totalExp.toLocaleString()} 원`;
         document.getElementById('totalIncome').textContent = totalInc.toLocaleString() + "원";
         document.getElementById('totalExpense').textContent = totalExp.toLocaleString() + "원";
+        document.getElementById('totalDate').textContent = totalDate.toLocaleString() + "원";
         document.getElementById('netTotal').textContent = (totalInc - totalExp).toLocaleString() + "원";
     }
 
@@ -751,7 +777,6 @@
             });
         };
         
-        // 두 차트 모두 구분이 잘 가는 다양한 색상 적용
         expenseChartInstance = createChart('expenseChartBox', 'expenseChart', expData, '지출', chartColorPalette);
         incomeChartInstance = createChart('incomeChartBox', 'incomeChart', incData, '수입', chartColorPalette);
     }
@@ -830,7 +855,6 @@
                 if (data.categories && data.entries) { 
                     categories = data.categories; entries = data.entries; fixedEntries = data.fixedEntries || []; 
                     
-                    // 파일 불러오기 시 UI 즉각 새로고침
                     updateCategoryOptions();
                     updateFixedCategoryOptions();
                     renderDataTab();
