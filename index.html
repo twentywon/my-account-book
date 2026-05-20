@@ -45,20 +45,17 @@
         
         .input-row { display: flex; flex-direction: column; gap: 12px; margin-bottom: 12px; }
         .input-row input, .input-row select { width: 100%; padding: 15px; border: 1px solid var(--border); border-radius: 10px; font-size: 16px; box-sizing: border-box; background-color: white; }
-        .btn-submit { width: 100%; padding: 16px; background-color: var(--primary); color: white; border: none; border-radius: 10px; font-size: 18px; font-weight: bold; cursor: pointer; transition: background-color 0.2s;}
         
+        .btn-submit { width: 100%; padding: 16px; background-color: var(--primary); color: white; border: none; border-radius: 10px; font-size: 18px; font-weight: bold; cursor: pointer; transition: background-color 0.2s;}
+
         .filter-section { display: flex; flex-direction: column; gap: 12px; margin-bottom: 20px; }
         .filter-section h3 { margin: 0; font-size: 18px; }
         .filter-controls-row { display: flex; gap: 10px; flex-wrap: wrap; }
         .filter-controls-row input { padding: 12px; border: 1px solid var(--border); border-radius: 8px; font-size: 16px; box-sizing: border-box; flex: 1; min-width: 140px; }
 
-        .summary { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; padding: 20px; background: #fff; border-radius: 12px; border: 1px solid var(--border); margin-top: 20px; }
-        .summary div { text-align: center; font-size: 14px; color: var(--text-muted); }
-        .summary div span { display: block; font-size: 18px; font-weight: bold; margin-top: 5px; }
-        .summary .full-width { grid-column: span 2; border-top: 1px dashed var(--border); padding-top: 15px; margin-top: 10px; }
-        .summary .full-width span { font-size: 22px; color: var(--primary); }
+        .comment-box { background-color: #f0fdf4; border: 1px solid #bbf7d0; padding: 15px; border-radius: 12px; margin-bottom: 20px; font-size: 15px; font-weight: 500; text-align: center; }
+        .comment-box.warn { background-color: #fef2f2; border: 1px solid #fca5a5; }
 
-        /* 테이블 공통 스타일 */
         .table-wrapper { border: 1px solid var(--border); border-radius: 10px; overflow: hidden; margin-bottom: 25px; }
         .table-header { padding: 15px; font-weight: bold; font-size: 16px; color: white; display: flex; justify-content: space-between; }
         .bg-income { background-color: var(--income); }
@@ -76,9 +73,45 @@
         .edit-btn { padding: 6px 10px; background-color: #e0e7ff; color: var(--primary); border-radius: 5px; border: none; font-weight: bold; cursor: pointer; }
         .save-inline-btn { padding: 6px 10px; background-color: #10b981; color: white; border-radius: 5px; border: none; font-weight: bold; cursor: pointer; }
         .cancel-inline-btn { padding: 6px 10px; background-color: #9ca3af; color: white; border-radius: 5px; border: none; font-weight: bold; cursor: pointer; }
-
-        /* 테이블 내 수정용 인풋 */
+        
         .inline-input { width: 100%; padding: 6px; box-sizing: border-box; border: 1px solid var(--primary); border-radius: 4px; font-size: 13px; }
+
+        .summary { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; padding: 20px; background: #fff; border-radius: 12px; border: 1px solid var(--border); margin-top: 20px; }
+        .summary div { text-align: center; font-size: 14px; color: var(--text-muted); }
+        .summary div span { display: block; font-size: 18px; font-weight: bold; margin-top: 5px; }
+        .summary .full-width { grid-column: span 2; border-top: 1px dashed var(--border); padding-top: 15px; margin-top: 10px; }
+        .summary .full-width span { font-size: 22px; color: var(--primary); }
+
+        .calendar-container { background: #fff; padding: 20px; border-radius: 12px; border: 1px solid var(--border); margin-bottom: 20px; }
+        .calendar-container h4 { margin: 0 0 15px 0; text-align: center; font-size: 18px; color: var(--text-main); }
+        .calendar-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; }
+        .cal-header { text-align: center; font-weight: bold; font-size: 13px; padding: 8px 0; background: #f9fafb; color: var(--text-muted); border-radius: 4px; }
+        
+        .cal-day { min-height: 60px; padding: 4px; border: 1px solid var(--border); border-radius: 6px; display: flex; flex-direction: column; background: #fff; cursor: pointer; transition: background-color 0.2s; }
+        .cal-day:hover { background-color: #f3f4f6; }
+        .cal-date { font-weight: bold; font-size: 12px; margin-bottom: 2px; color: var(--text-main); }
+        .cal-empty { background: transparent; border: none; cursor: default; }
+        
+        .cal-bar-wrapper { margin-top: auto; width: 100%; display: flex; flex-direction: column; gap: 2px; }
+        .cal-bar-inc { height: 6px; background-color: var(--income); border-radius: 3px; min-width: 2px; }
+        .cal-bar-exp { height: 6px; background-color: var(--expense); border-radius: 3px; min-width: 2px; }
+
+        .chart-container { background: #fff; padding: 20px; border-radius: 12px; border: 1px solid var(--border); margin-bottom: 20px; }
+        .chart-container h4 { margin: 0 0 15px 0; text-align: center; font-size: 18px; color: var(--text-main); }
+        .chart-box { position: relative; height: 300px; width: 100%; display: flex; justify-content: center; align-items: center;}
+        .no-data-msg { text-align: center; color: var(--text-muted); font-size: 15px; }
+
+        .data-section h3 { font-size: 18px; padding-bottom: 10px; border-bottom: 2px solid var(--border); display: flex; justify-content: space-between; align-items: center; margin-top: 0; }
+        .data-list { display: flex; flex-wrap: wrap; gap: 10px; list-style: none; padding: 0; margin: 0;}
+        .data-item { background-color: #f3f4f6; padding: 10px 15px; border-radius: 25px; font-size: 15px; display: flex; align-items: center; gap: 10px; border: 1px solid var(--border); }
+        .btn-add { background-color: var(--text-main); color: white; border: none; border-radius: 8px; padding: 8px 12px; font-size: 13px; cursor: pointer; }
+
+        .fixed-form { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; background: #f9fafb; padding: 15px; border-radius: 8px; margin-bottom: 15px; border: 1px solid var(--border); }
+        .fixed-form input, .fixed-form select { padding: 10px; border: 1px solid var(--border); border-radius: 6px; font-size: 14px; box-sizing: border-box; width: 100%; }
+        .fixed-form button { grid-column: span 2; padding: 12px; background-color: var(--primary); color: white; border: none; border-radius: 6px; font-weight: bold; cursor: pointer; }
+        .fixed-table { width: 100%; font-size: 13px; border-collapse: collapse; margin-top: 10px; }
+        .fixed-table th, .fixed-table td { padding: 10px 6px; border: 1px solid var(--border); text-align: center; }
+        .fixed-table th { background: #f3f4f6; }
 
         /* 플로팅 계산기 스타일 */
         .floating-calc-btn {
@@ -110,16 +143,15 @@
         .calc-key.eval { background: var(--primary); color: white; grid-column: span 2; }
         .calc-key.clear { background: #fee2e2; color: var(--expense); font-weight: bold; }
 
-        /* 기타 스타일 생략 (기존 통계/설정 유지) */
-        .chart-container { background: #fff; padding: 20px; border-radius: 12px; border: 1px solid var(--border); margin-bottom: 20px; }
-        .chart-box { position: relative; height: 300px; width: 100%; display: flex; justify-content: center; align-items: center;}
-        .data-list { display: flex; flex-wrap: wrap; gap: 10px; list-style: none; padding: 0; margin: 0;}
-        .data-item { background-color: #f3f4f6; padding: 10px 15px; border-radius: 25px; font-size: 15px; display: flex; align-items: center; gap: 10px; border: 1px solid var(--border); }
-        
         @media (min-width: 600px) {
             .input-row { flex-direction: row; }
             .summary { grid-template-columns: 1fr 1fr 1fr; }
             .summary .full-width { grid-column: span 1; border-top: none; margin-top: 0; padding-top: 0; }
+            .filter-controls-row { flex-wrap: nowrap; }
+            .cal-day { min-height: 80px; padding: 8px; }
+            .cal-date { font-size: 14px; }
+            .fixed-form { grid-template-columns: 1fr 2fr 2fr 2fr 2fr; }
+            .fixed-form button { grid-column: span 1; }
         }
     </style>
 </head>
@@ -155,7 +187,7 @@
                 <input type="text" id="detailInput" placeholder="세부 내용 (예: 점심 식사)">
                 <input type="tel" id="amountInput" placeholder="금액 (숫자만 입력)" oninput="formatNumber(this)">
             </div>
-            <button id="submitBtn" class="btn-submit" onclick="addNewEntry()">내역 추가하기</button>
+            <button class="btn-submit" onclick="addNewEntry()">내역 추가하기</button>
         </div>
 
         <div class="filter-section">
@@ -224,6 +256,14 @@
             <h3>📅 통계 조회 월</h3>
             <input type="month" id="statsMonth" onchange="syncMonths(this.value)">
         </div>
+
+        <div id="comparisonComment" class="comment-box">데이터 분석 중...</div>
+
+        <div class="calendar-container">
+            <h4>🗓️ 이번 달 흐름 (상대적 비율)</h4>
+            <div id="calendarGrid" class="calendar-grid"></div>
+        </div>
+
         <div class="chart-container">
             <h4>🔴 지출 비율</h4>
             <div id="expenseChartBox" class="chart-box"></div>
@@ -235,13 +275,38 @@
     </div>
 
     <div id="dataTab" class="tab-content">
-        <h3 class="txt-income" style="margin-top:0;">🔵 수입 항목 추가</h3>
-        <ul class="data-list" id="dataIncomeList"></ul><br>
-        <button onclick="addCategory('income')" style="padding:8px 15px; border-radius:5px; border:1px solid #ccc; cursor:pointer;">수입 항목 추가</button>
-        <br><br>
-        <h3 class="txt-expense">🔴 지출 항목 추가</h3>
-        <ul class="data-list" id="dataExpenseList"></ul><br>
-        <button onclick="addCategory('expense')" style="padding:8px 15px; border-radius:5px; border:1px solid #ccc; cursor:pointer;">지출 항목 추가</button>
+        <div class="data-section">
+            <h3 class="txt-income"><span>🔵 수입 항목</span><button class="btn-add" onclick="addCategory('income')">+ 추가</button></h3>
+            <ul class="data-list" id="dataIncomeList"></ul>
+        </div>
+        <div class="data-section" style="margin-top: 25px;">
+            <h3 class="txt-expense"><span>🔴 지출 항목</span><button class="btn-add" onclick="addCategory('expense')">+ 추가</button></h3>
+            <ul class="data-list" id="dataExpenseList"></ul>
+        </div>
+        
+        <div class="data-section" style="margin-top: 35px;">
+            <h3>🔄 매월 고정 수입/지출 관리</h3>
+            <div class="fixed-form">
+                <select id="fixedType" onchange="updateFixedCategoryOptions()">
+                    <option value="expense">지출</option>
+                    <option value="income">수입</option>
+                </select>
+                <input type="number" id="fixedDay" min="1" max="31" placeholder="날짜 (1~31)">
+                <select id="fixedCategory"></select>
+                <input type="text" id="fixedDetail" placeholder="내용 (예: 월세)">
+                <input type="number" id="fixedAmount" placeholder="금액 (숫자)">
+                <button onclick="addFixedEntry()">고정 자금 등록</button>
+            </div>
+            
+            <div style="overflow-x: auto;">
+                <table class="fixed-table">
+                    <thead>
+                        <tr><th>구분</th><th>일</th><th>항목</th><th>내용</th><th>금액</th><th>삭제</th></tr>
+                    </thead>
+                    <tbody id="fixedTableBody"></tbody>
+                </table>
+            </div>
+        </div>
     </div>
 </div>
 
@@ -270,7 +335,7 @@
 </div>
 
 <script>
-    // Firebase 연결 (본인 계정 정보 유지)
+    // Firebase 연결 (본인 계정 정보)
     const firebaseConfig = {
         apiKey: "AIzaSyBJ71IhAdTuQ2msJR_28Fyo50Q7Map5u58",
         authDomain: "money-c34ec.firebaseapp.com",
@@ -288,6 +353,7 @@
         expense: ['식비', '교통비', '문화생활', '생필품', '주거/통신']
     };
     let entries = [];
+    let fixedEntries = [];
     
     // 테이블 정렬 및 인라인 수정 상태 변수
     let sortConfig = { key: 'date', direction: 'desc' };
@@ -295,6 +361,12 @@
 
     let expenseChartInstance = null;
     let incomeChartInstance = null;
+    
+    // 구분이 명확한 차트 다색 팔레트 적용
+    const chartColorPalette = [
+        '#ef4444', '#3b82f6', '#10b981', '#f59e0b', '#8b5cf6', 
+        '#06b6d4', '#ec4899', '#84cc16', '#6366f1', '#f97316'
+    ];
 
     window.onload = function() {
         const today = new Date();
@@ -308,21 +380,112 @@
                 const data = doc.data();
                 categories = data.categories || categories;
                 entries = data.entries || [];
+                fixedEntries = data.fixedEntries || [];
             } else { saveData(); }
             
             updateCategoryOptions();
+            updateFixedCategoryOptions();
             renderDataTab();
+            renderFixedTable(); 
+            
+            checkAndApplyFixedEntries(document.getElementById('searchMonth').value);
+            
             renderTables();
             updateStatsTab();
         });
     };
 
     function saveData() {
-        db.collection("budget").doc("my_data").set({ categories, entries })
+        db.collection("budget").doc("my_data").set({ categories, entries, fixedEntries })
         .catch(error => console.error("저장 오류:", error));
     }
 
-    /* ==== 테이블 정렬 기능 ==== */
+    /* ==== 고정 자금 기능 ==== */
+    function updateFixedCategoryOptions() {
+        const type = document.getElementById('fixedType').value;
+        const select = document.getElementById('fixedCategory');
+        select.innerHTML = categories[type].map(cat => `<option value="${cat}">${cat}</option>`).join('');
+    }
+
+    function addFixedEntry() {
+        const type = document.getElementById('fixedType').value;
+        const day = parseInt(document.getElementById('fixedDay').value);
+        const category = document.getElementById('fixedCategory').value;
+        const detail = document.getElementById('fixedDetail').value.trim();
+        const amount = parseInt(document.getElementById('fixedAmount').value);
+
+        if(!day || day < 1 || day > 31 || !detail || !amount) {
+            return alert("모든 항목을 올바르게 입력해 주세요. (날짜는 1~31)");
+        }
+        
+        fixedEntries.push({ id: Date.now(), type, day, category, detail, amount });
+        
+        // Firebase 저장 전 즉각 UI 렌더링으로 딜레이 방지
+        renderFixedTable();
+        const currentMonth = document.getElementById('searchMonth').value;
+        checkAndApplyFixedEntries(currentMonth); 
+        
+        saveData();
+        
+        document.getElementById('fixedDay').value = '';
+        document.getElementById('fixedDetail').value = '';
+        document.getElementById('fixedAmount').value = '';
+    }
+
+    function deleteFixedEntry(id) {
+        if (confirm("이 고정 설정을 삭제하시겠습니까?")) {
+            fixedEntries = fixedEntries.filter(fe => fe.id !== id);
+            renderFixedTable(); // 즉시 UI 반영
+            saveData();
+        }
+    }
+
+    function renderFixedTable() {
+        const tbody = document.getElementById('fixedTableBody');
+        if (!tbody) return;
+        tbody.innerHTML = '';
+        
+        fixedEntries.forEach(fe => {
+            const tr = document.createElement('tr');
+            const typeStr = fe.type === 'income' ? '<span class="txt-income">수입</span>' : '<span class="txt-expense">지출</span>';
+            tr.innerHTML = `
+                <td>${typeStr}</td>
+                <td>매월 ${fe.day}일</td>
+                <td>${fe.category}</td>
+                <td>${fe.detail}</td>
+                <td>${fe.amount.toLocaleString()}</td>
+                <td><button class="delete-btn" onclick="deleteFixedEntry(${fe.id})">삭제</button></td>
+            `;
+            tbody.appendChild(tr);
+        });
+    }
+
+    function checkAndApplyFixedEntries(targetMonth) {
+        if (!fixedEntries || fixedEntries.length === 0) return;
+        let isUpdated = false;
+        
+        fixedEntries.forEach(fe => {
+            const tag = `fixed-${fe.id}-${targetMonth}`;
+            const exists = entries.some(e => e.fixedTag === tag);
+            
+            if (!exists) {
+                const dateStr = `${targetMonth}-${String(fe.day).padStart(2, '0')}`;
+                entries.push({
+                    id: Date.now() + Math.random(), type: fe.type, date: dateStr, category: fe.category,
+                    detail: `[고정] ${fe.detail}`, amount: fe.amount, fixedTag: tag
+                });
+                isUpdated = true;
+            }
+        });
+        
+        if (isUpdated) {
+            renderTables(); // 메인 내역 관리 탭 즉시 렌더링
+            updateStatsTab(); 
+            saveData();
+        }
+    }
+
+    /* ==== 일반 내역 기능 ==== */
     function setSort(key) {
         if (sortConfig.key === key) {
             sortConfig.direction = sortConfig.direction === 'asc' ? 'desc' : 'asc';
@@ -336,6 +499,7 @@
     function syncMonths(selectedMonth) {
         document.getElementById('searchMonth').value = selectedMonth;
         document.getElementById('statsMonth').value = selectedMonth;
+        checkAndApplyFixedEntries(selectedMonth);
         renderTables();
         updateStatsTab();
     }
@@ -372,10 +536,23 @@
 
     function addCategory(type) {
         const newCat = prompt("추가할 항목명:");
-        if (newCat && newCat.trim() !== '') { categories[type].push(newCat.trim()); saveData(); }
+        if (newCat && newCat.trim() !== '') { 
+            categories[type].push(newCat.trim()); 
+            renderDataTab();
+            updateCategoryOptions();
+            updateFixedCategoryOptions();
+            saveData(); 
+        }
     }
+    
     function deleteCategory(type, index) {
-        if (confirm("삭제하시겠습니까?")) { categories[type].splice(index, 1); saveData(); }
+        if (confirm("삭제하시겠습니까?")) { 
+            categories[type].splice(index, 1); 
+            renderDataTab();
+            updateCategoryOptions();
+            updateFixedCategoryOptions();
+            saveData(); 
+        }
     }
 
     function addNewEntry() {
@@ -388,6 +565,10 @@
         if (!date || !amount) return alert("날짜와 금액을 입력해주세요.");
         
         entries.push({ id: Date.now(), type, date, category, detail, amount });
+        
+        renderTables(); // 즉시 화면 갱신
+        updateStatsTab();
+        
         document.getElementById('detailInput').value = ''; 
         document.getElementById('amountInput').value = '';
         saveData();
@@ -396,6 +577,8 @@
     function deleteEntry(id) { 
         if (confirm("이 내역을 삭제할까요?")) { 
             entries = entries.filter(e => e.id !== id); 
+            renderTables(); // 즉시 화면 갱신
+            updateStatsTab();
             saveData(); 
         } 
     }
@@ -423,21 +606,23 @@
         if (index > -1) {
             entries[index] = { ...entries[index], date, category, detail, amount };
             inlineEditingId = null;
+            
+            renderTables(); // 즉각 렌더링
+            updateStatsTab();
+            
             saveData();
         }
     }
 
-    /* ==== 테이블 렌더링 및 정렬 ==== */
+    /* ==== 메인 내역 테이블 렌더링 ==== */
     function renderTables() {
         const searchMonth = document.getElementById('searchMonth').value;
         const keyword = document.getElementById('searchInput').value.toLowerCase().trim();
         
-        // 1. 데이터 필터링
         let filtered = entries.filter(e => {
             return e.date.startsWith(searchMonth) && (e.detail.toLowerCase().includes(keyword) || e.category.toLowerCase().includes(keyword));
         });
 
-        // 2. 데이터 정렬 (동적)
         filtered.sort((a, b) => {
             let valA = a[sortConfig.key];
             let valB = b[sortConfig.key];
@@ -456,7 +641,6 @@
         filtered.forEach(entry => {
             const tr = document.createElement('tr');
             
-            // 인라인 수정 모드일 때
             if (entry.id === inlineEditingId) {
                 const catOptions = categories[entry.type].map(c => `<option value="${c}" ${c===entry.category?'selected':''}>${c}</option>`).join('');
                 tr.innerHTML = `
@@ -470,7 +654,6 @@
                     </td>
                 `;
             } else {
-                // 일반 읽기 모드일 때
                 tr.innerHTML = `
                     <td>${entry.date.slice(5)}</td>
                     <td>${entry.category}</td>
@@ -497,7 +680,54 @@
         document.getElementById('netTotal').textContent = (totalInc - totalExp).toLocaleString() + "원";
     }
 
+    /* ==== 통계 업데이트 (달력, 차트, 코멘트) ==== */
     function updateStatsTab() {
+        renderCalendar();
+        renderCharts();
+        renderComparisonComment(); 
+    }
+
+    function renderCalendar() {
+        const targetMonth = document.getElementById('statsMonth').value;
+        if (!targetMonth) return;
+        const [year, month] = targetMonth.split('-');
+        const firstDay = new Date(year, month - 1, 1).getDay();
+        const lastDate = new Date(year, month, 0).getDate();
+
+        const calBox = document.getElementById('calendarGrid');
+        let html = '';
+        ['일', '월', '화', '수', '목', '금', '토'].forEach(d => html += `<div class="cal-header">${d}</div>`);
+        for(let i = 0; i < firstDay; i++) html += `<div class="cal-day cal-empty"></div>`;
+
+        let maxInc = 0; let maxExp = 0;
+        const dailyData = [];
+
+        for(let i = 1; i <= lastDate; i++) {
+            const dateStr = `${year}-${month}-${String(i).padStart(2, '0')}`;
+            const dayEntries = entries.filter(e => e.date === dateStr);
+            let inc = 0, exp = 0;
+            dayEntries.forEach(e => { if(e.type === 'income') inc += e.amount; else exp += e.amount; });
+            if(inc > maxInc) maxInc = inc;
+            if(exp > maxExp) maxExp = exp;
+            dailyData.push({ date: dateStr, dayNum: i, inc, exp });
+        }
+
+        dailyData.forEach(data => {
+            let barsHtml = '<div class="cal-bar-wrapper">';
+            if (data.inc > 0) barsHtml += `<div class="cal-bar-inc" style="width: ${(data.inc / maxInc) * 100}%;"></div>`;
+            if (data.exp > 0) barsHtml += `<div class="cal-bar-exp" style="width: ${(data.exp / maxExp) * 100}%;"></div>`;
+            barsHtml += '</div>';
+            html += `
+                <div class="cal-day" onclick="alert('${data.date} 요약\\n\\n🔵 수입: ${data.inc.toLocaleString()}원\\n🔴 지출: ${data.exp.toLocaleString()}원')">
+                    <div class="cal-date">${data.dayNum}</div>
+                    ${(data.inc > 0 || data.exp > 0) ? barsHtml : ''}
+                </div>
+            `;
+        });
+        calBox.innerHTML = html;
+    }
+
+    function renderCharts() {
         const targetMonth = document.getElementById('statsMonth').value;
         const filtered = entries.filter(e => e.date && e.date.startsWith(targetMonth));
         const expData = {}; const incData = {};
@@ -512,7 +742,7 @@
 
         const createChart = (boxId, canvasId, dataObj, title, colors) => {
             const box = document.getElementById(boxId);
-            if(Object.keys(dataObj).length === 0) { box.innerHTML = `<div style="text-align:center; color:#999;">데이터 없음</div>`; return null; }
+            if(Object.keys(dataObj).length === 0) { box.innerHTML = `<div class="no-data-msg">${title} 내역이 없습니다.</div>`; return null; }
             box.innerHTML = `<canvas id="${canvasId}"></canvas>`;
             return new Chart(document.getElementById(canvasId), {
                 type: 'doughnut',
@@ -520,8 +750,49 @@
                 options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom' } } }
             });
         };
-        expenseChartInstance = createChart('expenseChartBox', 'expenseChart', expData, '지출', ['#ef4444', '#f87171', '#fca5a5', '#dc2626', '#b91c1c']);
-        incomeChartInstance = createChart('incomeChartBox', 'incomeChart', incData, '수입', ['#3b82f6', '#60a5fa', '#93c5fd', '#2563eb', '#1d4ed8']);
+        
+        // 두 차트 모두 구분이 잘 가는 다양한 색상 적용
+        expenseChartInstance = createChart('expenseChartBox', 'expenseChart', expData, '지출', chartColorPalette);
+        incomeChartInstance = createChart('incomeChartBox', 'incomeChart', incData, '수입', chartColorPalette);
+    }
+
+    function renderComparisonComment() {
+        const targetMonth = document.getElementById('statsMonth').value;
+        if (!targetMonth) return;
+        
+        const [year, month] = targetMonth.split('-').map(Number);
+        const prevMonthStr = `${month === 1 ? year - 1 : year}-${String(month === 1 ? 12 : month - 1).padStart(2, '0')}`;
+        
+        const currExp = entries.filter(e => e.date.startsWith(targetMonth) && e.type === 'expense');
+        const prevExp = entries.filter(e => e.date.startsWith(prevMonthStr) && e.type === 'expense');
+        
+        const box = document.getElementById('comparisonComment');
+        if (currExp.length === 0) {
+            box.className = "comment-box";
+            box.textContent = "💡 아직 이번 달 지출 내역이 없습니다. 소비를 기록해 보세요!";
+            return;
+        }
+
+        const currSums = {}; const prevSums = {};
+        currExp.forEach(e => currSums[e.category] = (currSums[e.category] || 0) + e.amount);
+        prevExp.forEach(e => prevSums[e.category] = (prevSums[e.category] || 0) + e.amount);
+        
+        const increased = [];
+        for (const cat in currSums) {
+            const diff = currSums[cat] - (prevSums[cat] || 0);
+            if (diff > 0) increased.push({ category: cat, diff });
+        }
+        increased.sort((a, b) => b.diff - a.diff);
+
+        if (increased.length > 0) {
+            box.className = "comment-box warn";
+            let html = `🚨 <b>지출 경고!</b> 지난달보다 지출이 늘어난 항목이 있습니다.<br><div style="text-align: left; margin-top: 10px;">`;
+            increased.forEach(item => html += `<div>• <b>${item.category}</b> : <span class="txt-expense">+${item.diff.toLocaleString()}원</span></div>`);
+            box.innerHTML = html + `</div>`;
+        } else {
+            box.className = "comment-box";
+            box.innerHTML = `👏 <b>훌륭합니다!</b> 지난달 대비 지출이 증가한 항목이 없습니다.`;
+        }
     }
 
     /* ==== 플로팅 계산기 로직 ==== */
@@ -533,19 +804,11 @@
 
     function calcInput(val) {
         const display = document.getElementById('calcDisplay');
-        
         if (val === 'C') {
-            calcValue = '';
-            display.value = '0';
+            calcValue = ''; display.value = '0';
         } else if (val === '=') {
-            try {
-                // eval을 사용한 간단한 사칙연산 (클라이언트 사이드에서 안전한 입력만 통과)
-                calcValue = eval(calcValue).toString(); 
-                display.value = calcValue;
-            } catch(e) {
-                display.value = 'Error';
-                calcValue = '';
-            }
+            try { calcValue = eval(calcValue).toString(); display.value = calcValue; } 
+            catch(e) { display.value = 'Error'; calcValue = ''; }
         } else {
             if (calcValue === '0' && val !== '.') calcValue = '';
             calcValue += val;
@@ -553,9 +816,9 @@
         }
     }
 
-    /* 백업 기능 */
+    /* ==== 백업/복구 기능 ==== */
     function exportData() {
-        const blob = new Blob([JSON.stringify({ categories, entries }, null, 2)], { type: 'application/json' });
+        const blob = new Blob([JSON.stringify({ categories, entries, fixedEntries }, null, 2)], { type: 'application/json' });
         const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `가계부백업_${new Date().toISOString().slice(0, 10)}.json`; a.click();
     }
     function importData(event) {
@@ -564,7 +827,20 @@
         reader.onload = function(e) {
             try {
                 const data = JSON.parse(e.target.result);
-                if (data.categories && data.entries) { categories = data.categories; entries = data.entries; saveData(); alert("복구 완료!"); }
+                if (data.categories && data.entries) { 
+                    categories = data.categories; entries = data.entries; fixedEntries = data.fixedEntries || []; 
+                    
+                    // 파일 불러오기 시 UI 즉각 새로고침
+                    updateCategoryOptions();
+                    updateFixedCategoryOptions();
+                    renderDataTab();
+                    renderFixedTable();
+                    renderTables();
+                    updateStatsTab();
+                    
+                    saveData(); 
+                    alert("복구 완료!"); 
+                }
             } catch (err) { alert("파일 오류"); }
         };
         reader.readAsText(file);
