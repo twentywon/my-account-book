@@ -2,10 +2,10 @@
 <html lang="ko">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>나만의 스마트 가계부</title>
     
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.9/dist/chart.umd.min.js"></script>
     
     <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.8.1/firebase-firestore-compat.js"></script>
@@ -165,13 +165,277 @@
             .fixed-form button { grid-column: span 1; }
             .stock-charts-grid { grid-template-columns: 1fr 1fr; }
         }
+
+        :root {
+            --primary: #635bff;
+            --primary-hover: #5148e5;
+            --income: #0ea5e9;
+            --expense: #f43f5e;
+            --date-color: #db2777;
+            --bg-color: #f5f7fb;
+            --card-bg: rgba(255,255,255,0.96);
+            --surface-soft: #f8fafc;
+            --text-main: #172033;
+            --text-muted: #667085;
+            --border: #e4e9f2;
+            --shadow-sm: 0 8px 24px rgba(15,23,42,0.06);
+            --shadow-lg: 0 24px 70px rgba(31,41,55,0.12);
+        }
+
+        * { scrollbar-width: thin; scrollbar-color: #cbd5e1 transparent; }
+        html { background: var(--bg-color); }
+        body {
+            min-height: 100vh;
+            padding: 28px 18px 90px;
+            background:
+                radial-gradient(circle at 8% 0%, rgba(99,91,255,0.13), transparent 30%),
+                radial-gradient(circle at 92% 5%, rgba(14,165,233,0.10), transparent 26%),
+                linear-gradient(180deg, #f9faff 0%, #f3f6fb 100%);
+            letter-spacing: -0.01em;
+        }
+        button, input, select { font: inherit; }
+        button { transition: transform .18s ease, box-shadow .18s ease, background-color .18s ease, border-color .18s ease; }
+        button:hover { transform: translateY(-1px); }
+        button:active { transform: translateY(0); }
+        button:focus-visible, input:focus-visible, select:focus-visible {
+            outline: 3px solid rgba(99,91,255,0.18);
+            outline-offset: 2px;
+        }
+
+        .container {
+            max-width: 1040px;
+            border: 1px solid rgba(226,232,240,0.9);
+            border-radius: 24px;
+            box-shadow: var(--shadow-lg);
+            backdrop-filter: blur(16px);
+        }
+        .header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 24px;
+            padding: 28px 32px;
+            background: linear-gradient(135deg, #ffffff 0%, #f7f8ff 100%);
+        }
+        .header-title { min-width: 0; }
+        .header h1 {
+            margin: 0;
+            text-align: left;
+            font-size: clamp(22px, 3vw, 30px);
+            letter-spacing: -0.04em;
+            color: var(--text-main);
+        }
+        .header h1 span { color: var(--primary); }
+        .header-subtitle { margin: 5px 0 0; color: var(--text-muted); font-size: 13px; }
+        .file-controls { width: min(100%, 320px); flex-shrink: 0; }
+        .btn-small {
+            padding: 11px 14px;
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            box-shadow: 0 2px 5px rgba(15,23,42,0.03);
+        }
+        .btn-save { background: linear-gradient(135deg, var(--primary), #7c72ff); box-shadow: 0 8px 18px rgba(99,91,255,.22); }
+        .btn-load { background: #fff; }
+
+        .tabs {
+            position: sticky;
+            top: 0;
+            z-index: 50;
+            gap: 6px;
+            padding: 8px;
+            background: rgba(248,250,252,.92);
+            backdrop-filter: blur(14px);
+        }
+        .tab-btn {
+            padding: 13px 12px;
+            border-radius: 11px;
+            font-size: 14px;
+            border: 1px solid transparent;
+        }
+        .tab-btn:hover { color: var(--primary); background: #fff; }
+        .tab-btn.active {
+            color: var(--primary);
+            background: #fff;
+            border: 1px solid #e4e2ff;
+            box-shadow: 0 5px 14px rgba(99,91,255,.10);
+        }
+        .tab-content { padding: 30px 32px 36px; }
+        .tab-content.active { animation: contentIn .28s ease both; }
+        @keyframes contentIn { from { opacity: 0; transform: translateY(5px); } to { opacity: 1; transform: none; } }
+
+        .input-card, .chart-container, .calendar-container, .summary {
+            border-color: var(--border);
+            box-shadow: var(--shadow-sm);
+        }
+        .input-card {
+            padding: 24px;
+            border-radius: 18px;
+            background: linear-gradient(145deg, #fff 0%, #fafbff 100%);
+        }
+        .radio-group {
+            gap: 12px;
+            padding: 5px;
+            border-radius: 14px;
+        }
+        .radio-group label {
+            min-height: 38px;
+            padding: 0 12px;
+            border-radius: 10px;
+            font-size: 15px;
+            background: #fff;
+            border: 1px solid var(--border);
+        }
+        .radio-group input { accent-color: var(--primary); }
+        .input-row input, .input-row select, .filter-controls-row input,
+        .fixed-form input, .fixed-form select, .inline-input {
+            border-color: #dbe2ec;
+            background: #fff;
+            box-shadow: 0 1px 2px rgba(15,23,42,.025);
+        }
+        .input-row input:hover, .input-row select:hover, .filter-controls-row input:hover,
+        .fixed-form input:hover, .fixed-form select:hover { border-color: #b9c4d3; }
+        .input-row input:focus, .input-row select:focus, .filter-controls-row input:focus,
+        .fixed-form input:focus, .fixed-form select:focus {
+            border-color: var(--primary);
+            box-shadow: 0 0 0 4px rgba(99,91,255,.10);
+            outline: none;
+        }
+        .btn-submit {
+            border-radius: 13px;
+            background: linear-gradient(135deg, var(--primary), #7b72ff);
+            box-shadow: 0 10px 22px rgba(99,91,255,.20);
+        }
+        .btn-submit:hover { box-shadow: 0 13px 26px rgba(99,91,255,.27); }
+
+        .filter-section {
+            padding: 18px;
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            background: var(--surface-soft);
+        }
+        .summary {
+            gap: 12px;
+            padding: 14px;
+            border-radius: 18px;
+            background: #fff;
+        }
+        .summary > div {
+            padding: 16px 10px;
+            border-radius: 13px;
+            background: var(--surface-soft);
+        }
+        .summary div span { font-size: 20px; letter-spacing: -0.03em; }
+        .summary .full-width {
+            margin-top: 0;
+            border-top: 0;
+            background: linear-gradient(135deg, rgba(99,91,255,.09), rgba(14,165,233,.07));
+        }
+
+        .table-wrapper {
+            border-radius: 16px;
+            background: #fff;
+            box-shadow: var(--shadow-sm);
+        }
+        .table-header { padding: 16px 18px; }
+        .bg-income { background: linear-gradient(135deg, #0284c7, #38bdf8); }
+        .bg-expense { background: linear-gradient(135deg, #e11d48, #fb7185); }
+        .bg-stock { background: linear-gradient(135deg, #6d28d9, #a78bfa); }
+        .bg-trade { background: linear-gradient(135deg, #334155, #64748b); }
+        th { background: #f8fafc; font-size: 12px; text-transform: uppercase; letter-spacing: .02em; }
+        tbody tr { transition: background-color .16s ease; }
+        tbody tr:nth-child(even) { background: #fbfcfe; }
+        tbody tr:hover { background: #f5f7ff; }
+        th, td { padding: 13px 8px; }
+        .delete-btn, .edit-btn, .save-inline-btn, .cancel-inline-btn {
+            padding: 7px 10px;
+            border-radius: 8px;
+        }
+
+        .chart-container, .calendar-container { border-radius: 18px; }
+        .chart-container h4, .calendar-container h4 { letter-spacing: -0.025em; }
+        .cal-header { background: #f3f5fa; }
+        .cal-day { border-radius: 9px; border-color: #e7ebf2; }
+        .cal-day:hover { background: #f4f3ff; border-color: #d8d5ff; }
+        .comment-box { border-radius: 15px; box-shadow: var(--shadow-sm); }
+        .data-item { background: #fff; box-shadow: 0 3px 10px rgba(15,23,42,.04); }
+        .btn-add { border-radius: 10px; background: #273244; }
+        .fixed-form { border-radius: 14px; padding: 16px; background: var(--surface-soft); }
+        .fixed-form button { border-radius: 10px; background: var(--primary); }
+
+        .floating-calc-btn {
+            right: 24px;
+            bottom: 24px;
+            width: 58px;
+            height: 58px;
+            background: linear-gradient(145deg, #655cff, #4338ca);
+            box-shadow: 0 14px 32px rgba(67,56,202,.36);
+        }
+        .calculator-panel {
+            right: 24px;
+            bottom: 96px;
+            width: 286px;
+            padding: 16px;
+            border: 1px solid rgba(255,255,255,.12);
+            border-radius: 20px;
+            background: #171b29;
+            box-shadow: 0 28px 70px rgba(15,23,42,.38);
+        }
+        .calc-display {
+            height: 62px;
+            margin-bottom: 12px;
+            border: 1px solid rgba(255,255,255,.08);
+            border-radius: 13px;
+            background: #0d111c;
+            color: #f8fafc;
+            font-size: 27px;
+        }
+        .calc-keys { grid-template-columns: repeat(4, 1fr); gap: 8px; }
+        .calc-key {
+            min-height: 48px;
+            padding: 10px 0;
+            border: 1px solid rgba(255,255,255,.06);
+            border-radius: 12px;
+            background: #272d3d;
+            color: #f8fafc;
+        }
+        .calc-key:hover { background: #343b4e; }
+        .calc-key:active { background: #3f475c; }
+        .calc-key.op { background: #302e55; color: #b9b5ff; }
+        .calc-key.clear { background: #462a38; color: #ff9caf; }
+        .calc-key.eval {
+            grid-column: auto;
+            background: linear-gradient(145deg, #756cff, #564bee);
+            color: #fff;
+        }
+        .calc-key.zero { grid-column: span 2; }
+        .calc-key.plus { grid-row: span 3; }
+
+        @media (max-width: 599px) {
+            body { padding: 0 0 88px; }
+            .container { border-radius: 0 0 22px 22px; border-left: 0; border-right: 0; }
+            .header { display: block; padding: 22px 18px; }
+            .header h1 { text-align: center; }
+            .header-subtitle { text-align: center; }
+            .file-controls { width: 100%; margin-top: 18px; }
+            .tabs { overflow-x: auto; flex-wrap: nowrap; }
+            .tab-btn { min-width: 92px; }
+            .tab-content { padding: 20px 14px 28px; }
+            .input-card { padding: 18px; }
+            .radio-group { flex-wrap: wrap; }
+            .summary > div { padding: 13px 6px; }
+            .calculator-panel { right: 12px; bottom: 82px; width: min(286px, calc(100vw - 24px)); box-sizing: border-box; }
+            .floating-calc-btn { right: 16px; bottom: 16px; }
+        }
     </style>
 </head>
 <body>
 
 <div class="container">
     <div class="header">
-        <h1>📊 스마트 가계부</h1>
+        <div class="header-title">
+            <h1>📊 스마트 <span>가계부</span></h1>
+            <p class="header-subtitle">수입·지출과 투자 흐름을 한눈에 관리하세요.</p>
+        </div>
         <div class="file-controls">
             <button class="btn-small btn-load" onclick="document.getElementById('fileInput').click()">📂 백업 불러오기</button>
             <input type="file" id="fileInput" accept=".json" onchange="importData(event)">
@@ -219,7 +483,7 @@
             <div>총 수입 <span id="totalIncome" class="txt-income">0</span></div>
             <div>총 지출 <span id="totalExpense" class="txt-expense">0</span></div>
             <div>데이트 총액 <span id="totalDate" class="txt-date">0</span></div>
-            <div class="full-width" style="grid-column: span 1;">현재 잔액 <span id="netTotal">0</span></div>
+            <div class="full-width">현재 잔액 <span id="netTotal">0</span></div>
         </div>
 
         <div class="tables-container" style="margin-top: 25px;">
@@ -412,8 +676,8 @@
     </div>
 </div>
 
-<button class="floating-calc-btn" onclick="toggleCalculator()">🧮</button>
-<div class="calculator-panel" id="calcPanel">
+<button class="floating-calc-btn" onclick="toggleCalculator()" aria-label="계산기 열기" aria-controls="calcPanel" aria-expanded="false">🧮</button>
+<div class="calculator-panel" id="calcPanel" role="dialog" aria-label="계산기">
     <input type="text" class="calc-display" id="calcDisplay" value="0" readonly>
     <div class="calc-keys">
         <button class="calc-key clear" onclick="calcInput('C')">C</button>
@@ -423,16 +687,16 @@
         <button class="calc-key" onclick="calcInput('7')">7</button>
         <button class="calc-key" onclick="calcInput('8')">8</button>
         <button class="calc-key" onclick="calcInput('9')">9</button>
-        <button class="calc-key op" onclick="calcInput('+')" style="grid-row: span 2; display: flex; align-items: center; justify-content: center;">+</button>
+        <button class="calc-key op plus" onclick="calcInput('+')">+</button>
         <button class="calc-key" onclick="calcInput('4')">4</button>
         <button class="calc-key" onclick="calcInput('5')">5</button>
         <button class="calc-key" onclick="calcInput('6')">6</button>
         <button class="calc-key" onclick="calcInput('1')">1</button>
         <button class="calc-key" onclick="calcInput('2')">2</button>
         <button class="calc-key" onclick="calcInput('3')">3</button>
-        <button class="calc-key eval" onclick="calcInput('=')" style="grid-row: span 2; display: flex; align-items: center; justify-content: center;">=</button>
-        <button class="calc-key" onclick="calcInput('0')" style="grid-column: span 2;">0</button>
+        <button class="calc-key zero" onclick="calcInput('0')">0</button>
         <button class="calc-key" onclick="calcInput('.')">.</button>
+        <button class="calc-key eval" onclick="calcInput('=')">=</button>
     </div>
 </div>
 
@@ -472,10 +736,41 @@
         '#06b6d4', '#ec4899', '#84cc16', '#6366f1', '#f97316'
     ];
 
+    let lastDataSignature = '';
+
+    function getDataPayload() {
+        return { categories, entries, fixedEntries, trades };
+    }
+
+    function escapeHTML(value) {
+        return String(value ?? '').replace(/[&<>'"]/g, char => ({
+            '&': '&amp;', '<': '&lt;', '>': '&gt;', "'": '&#39;', '"': '&quot;'
+        })[char]);
+    }
+
+    function encodeKey(value) {
+        return encodeURIComponent(String(value)).replace(/'/g, '%27');
+    }
+
+    function localISODate(date = new Date()) {
+        const local = new Date(date.getTime() - date.getTimezoneOffset() * 60000);
+        return local.toISOString().slice(0, 10);
+    }
+
+    function isValidBackup(data) {
+        return data && typeof data === 'object'
+            && data.categories && typeof data.categories === 'object'
+            && Array.isArray(data.categories.income)
+            && Array.isArray(data.categories.expense)
+            && Array.isArray(data.entries)
+            && (!data.fixedEntries || Array.isArray(data.fixedEntries))
+            && (!data.trades || Array.isArray(data.trades));
+    }
+
     window.onload = function() {
         const today = new Date();
-        const currentMonth = today.toISOString().slice(0, 7);
-        const todayStr = today.toISOString().slice(0, 10);
+        const todayStr = localISODate(today);
+        const currentMonth = todayStr.slice(0, 7);
         
         document.getElementById('searchMonth').value = currentMonth;
         document.getElementById('statsMonth').value = currentMonth;
@@ -488,6 +783,13 @@
         db.collection("budget").doc("my_data").onSnapshot((doc) => {
             if (doc.exists) {
                 const data = doc.data();
+                const incomingSignature = JSON.stringify({
+                    categories: data.categories || categories,
+                    entries: data.entries || [],
+                    fixedEntries: data.fixedEntries || [],
+                    trades: data.trades || []
+                });
+                if (incomingSignature === lastDataSignature) return;
                 categories = data.categories || categories;
                 entries = data.entries || [];
                 fixedEntries = data.fixedEntries || [];
@@ -504,11 +806,17 @@
             renderTables();
             renderStockTab(); 
             updateStatsTab();
+            lastDataSignature = JSON.stringify(getDataPayload());
+        }, error => {
+            console.error("데이터 불러오기 오류:", error);
+            alert("데이터를 불러오지 못했습니다. 인터넷 연결과 Firebase 권한을 확인해 주세요.");
         });
     };
 
     function saveData() {
-        db.collection("budget").doc("my_data").set({ categories, entries, fixedEntries, trades })
+        const payload = getDataPayload();
+        lastDataSignature = JSON.stringify(payload);
+        return db.collection("budget").doc("my_data").set(payload)
         .catch(error => console.error("저장 오류:", error));
     }
 
@@ -579,12 +887,12 @@
 
         if (market === 'domestic') {
             priceKRW = Number(document.getElementById('tradePriceKRW').value.replace(/,/g, ''));
-            if (!date || !name || !priceKRW || !qty) return alert("입력값을 확인해 주십시오.");
+            if (!date || !name || !Number.isFinite(priceKRW) || priceKRW <= 0 || !Number.isFinite(qty) || qty <= 0) return alert("입력값을 확인해 주십시오.");
             total = priceKRW * qty;
         } else {
             priceUSD = Number(document.getElementById('tradePriceUSD').value);
             exchangeRate = Number(document.getElementById('tradeExchangeRate').value.replace(/,/g, ''));
-            if (!date || !name || !priceUSD || !exchangeRate || !qty) return alert("해외주식 단가와 환율을 모두 입력해 주십시오.");
+            if (!date || !name || !Number.isFinite(priceUSD) || priceUSD <= 0 || !Number.isFinite(exchangeRate) || exchangeRate <= 0 || !Number.isFinite(qty) || qty <= 0) return alert("해외주식 단가와 환율을 모두 입력해 주십시오.");
             total = Math.round(priceUSD * exchangeRate * qty);
         }
 
@@ -679,7 +987,7 @@
 
             const total = newQty * newAvg;
             const tradeId = Date.now();
-            const date = new Date().toISOString().slice(0, 10);
+            const date = localISODate();
             
             trades.push({
                 id: tradeId, type: 'buy', market: market, date: date, name: newName,
@@ -746,28 +1054,29 @@
             const badge = data.market === 'domestic' ? '<span class="badge-dom">국내</span>' : '<span class="badge-ovs">해외</span>';
             const tr = document.createElement('tr');
             
+            const safeKey = encodeKey(key);
             if (key === inlineEditingPortKey) {
                 tr.innerHTML = `
                     <td>${badge}</td>
-                    <td><input type="text" id="edit_port_name" class="inline-input" value="${data.name}" placeholder="종목명"></td>
+                    <td><input type="text" id="edit_port_name" class="inline-input" value="${escapeHTML(data.name)}" placeholder="종목명"></td>
                     <td><input type="number" id="edit_port_qty" class="inline-input" value="${data.qty}" placeholder="수량"></td>
                     <td><input type="number" id="edit_port_avg" class="inline-input" value="${data.avgPrice}" placeholder="단가 (원)"></td>
                     <td style="color:#8b5cf6;">(자동계산)</td>
                     <td class="action-btns">
-                        <button class="save-inline-btn" onclick="savePortfolioEdit('${key}')">저장</button>
+                        <button class="save-inline-btn" onclick="savePortfolioEdit(decodeURIComponent('${safeKey}'))">저장</button>
                         <button class="cancel-inline-btn" onclick="cancelPortfolioEdit()">취소</button>
                     </td>
                 `;
             } else {
                 tr.innerHTML = `
                     <td>${badge}</td>
-                    <td style="font-weight:bold;">${data.name}</td>
+                    <td style="font-weight:bold;">${escapeHTML(data.name)}</td>
                     <td>${data.qty.toLocaleString()} 주</td>
                     <td>${data.avgPrice.toLocaleString()} 원</td>
                     <td style="color:#8b5cf6; font-weight:bold;">${cost.toLocaleString()} 원</td>
                     <td class="action-btns">
-                        <button class="edit-btn" onclick="startPortfolioEdit('${key}')">수정</button>
-                        <button class="delete-btn" onclick="deletePortfolio('${key}')">삭제</button>
+                        <button class="edit-btn" onclick="startPortfolioEdit(decodeURIComponent('${safeKey}'))">수정</button>
+                        <button class="delete-btn" onclick="deletePortfolio(decodeURIComponent('${safeKey}'))">삭제</button>
                     </td>
                 `;
             }
@@ -831,13 +1140,13 @@
             const priceText = market === 'domestic' ? `${t.priceKRW.toLocaleString()}원` : `$${t.priceUSD.toLocaleString()}`;
             
             tr.innerHTML = `
-                <td>${t.date.slice(5)}</td>
+                <td>${escapeHTML(String(t.date || '').slice(5))}</td>
                 <td>${badge}</td>
-                <td>${t.name}</td>
+                <td>${escapeHTML(t.name)}</td>
                 <td>${typeSpan}</td>
-                <td>${priceText}</td>
-                <td>${t.qty.toLocaleString()}</td>
-                <td style="font-weight:bold;">${t.total.toLocaleString()}</td>
+                <td>${escapeHTML(priceText)}</td>
+                <td>${Number(t.qty || 0).toLocaleString()}</td>
+                <td style="font-weight:bold;">${Number(t.total || 0).toLocaleString()}</td>
                 <td><button class="delete-btn" onclick="deleteTrade(${t.id})">삭제</button></td>
             `;
             tradeBody.appendChild(tr);
@@ -850,7 +1159,7 @@
     function updateFixedCategoryOptions() {
         const type = document.getElementById('fixedType').value;
         const select = document.getElementById('fixedCategory');
-        select.innerHTML = categories[type].map(cat => `<option value="${cat}">${cat}</option>`).join('');
+        select.innerHTML = categories[type].map(cat => `<option value="${escapeHTML(cat)}">${escapeHTML(cat)}</option>`).join('');
     }
 
     function addFixedEntry() {
@@ -860,7 +1169,7 @@
         const detail = document.getElementById('fixedDetail').value.trim();
         const amount = parseInt(document.getElementById('fixedAmount').value);
 
-        if(!day || day < 1 || day > 31 || !detail || !amount) {
+        if(!day || day < 1 || day > 31 || !detail || !Number.isFinite(amount) || amount <= 0) {
             return alert("모든 항목을 올바르게 입력해 주세요. (날짜는 1~31)");
         }
         
@@ -896,8 +1205,8 @@
             tr.innerHTML = `
                 <td>${typeStr}</td>
                 <td>매월 ${fe.day}일</td>
-                <td>${fe.category}</td>
-                <td>${fe.detail}</td>
+                <td>${escapeHTML(fe.category)}</td>
+                <td>${escapeHTML(fe.detail)}</td>
                 <td>${fe.amount.toLocaleString()}</td>
                 <td><button class="delete-btn" onclick="deleteFixedEntry(${fe.id})">삭제</button></td>
             `;
@@ -914,7 +1223,10 @@
             const exists = entries.some(e => e.fixedTag === tag);
             
             if (!exists) {
-                const dateStr = `${targetMonth}-${String(fe.day).padStart(2, '0')}`;
+                const [year, month] = targetMonth.split('-').map(Number);
+                const lastDay = new Date(year, month, 0).getDate();
+                const appliedDay = Math.min(fe.day, lastDay);
+                const dateStr = `${targetMonth}-${String(appliedDay).padStart(2, '0')}`;
                 entries.push({
                     id: Date.now() + Math.random(), type: fe.type, date: dateStr, category: fe.category,
                     detail: `[고정] ${fe.detail}`, amount: fe.amount, fixedTag: tag, isDate: false
@@ -952,7 +1264,7 @@
     function updateCategoryOptions() {
         const type = document.querySelector('input[name="type"]:checked').value;
         const select = document.getElementById('categorySelect');
-        select.innerHTML = categories[type].map(cat => `<option value="${cat}">${cat}</option>`).join('');
+        select.innerHTML = categories[type].map(cat => `<option value="${escapeHTML(cat)}">${escapeHTML(cat)}</option>`).join('');
         
         document.getElementById('dateCheckRow').style.display = type === 'expense' ? 'flex' : 'none';
     }
@@ -960,7 +1272,7 @@
     function renderDataTab() {
         const renderList = (type, elementId) => {
             document.getElementById(elementId).innerHTML = categories[type].map((item, idx) => `
-                <li class="data-item">${item}
+                <li class="data-item">${escapeHTML(item)}
                     <span onclick="deleteCategory('${type}', ${idx})" style="cursor:pointer; color:red; font-size:12px;">❌</span>
                 </li>`).join('');
         };
@@ -997,7 +1309,7 @@
         const amount = Number(document.getElementById('amountInput').value.replace(/,/g, ''));
         const isDate = type === 'expense' ? document.getElementById('isDateCheck').checked : false;
         
-        if (!date || !amount) return alert("날짜와 금액을 입력해주세요.");
+        if (!date || !Number.isFinite(amount) || amount <= 0) return alert("날짜와 금액을 입력해주세요.");
         
         entries.push({ id: Date.now(), type, date, category, detail, amount, isDate });
         
@@ -1039,7 +1351,7 @@
         const amount = Number(document.getElementById(`edit_amt_${id}`).value);
         const isDate = type === 'expense' && document.getElementById(`edit_isDate_${id}`) ? document.getElementById(`edit_isDate_${id}`).checked : false;
 
-        if (!date || !amount) return alert("날짜와 금액은 필수입니다.");
+        if (!date || !Number.isFinite(amount) || amount <= 0) return alert("날짜와 금액은 필수입니다.");
 
         const index = entries.findIndex(e => e.id === id);
         if (index > -1) {
@@ -1058,7 +1370,8 @@
         const keyword = document.getElementById('searchInput').value.toLowerCase().trim();
         
         let filtered = entries.filter(e => {
-            return e.date.startsWith(searchMonth) && (e.detail.toLowerCase().includes(keyword) || e.category.toLowerCase().includes(keyword));
+            return String(e.date || '').startsWith(searchMonth)
+                && (String(e.detail || '').toLowerCase().includes(keyword) || String(e.category || '').toLowerCase().includes(keyword));
         });
 
         filtered.sort((a, b) => {
@@ -1080,14 +1393,14 @@
             const tr = document.createElement('tr');
             
             if (entry.id === inlineEditingId) {
-                const catOptions = categories[entry.type].map(c => `<option value="${c}" ${c===entry.category?'selected':''}>${c}</option>`).join('');
+                const catOptions = categories[entry.type].map(c => `<option value="${escapeHTML(c)}" ${c===entry.category?'selected':''}>${escapeHTML(c)}</option>`).join('');
                 const dateEditHtml = entry.type === 'expense' ? `<div><label style="font-size:11px; cursor:pointer; color:var(--date-color);"><input type="checkbox" id="edit_isDate_${entry.id}" ${entry.isDate ? 'checked' : ''}> 데이트</label></div>` : '';
                 
                 tr.innerHTML = `
-                    <td><input type="date" id="edit_date_${entry.id}" class="inline-input" value="${entry.date}"></td>
+                    <td><input type="date" id="edit_date_${entry.id}" class="inline-input" value="${escapeHTML(entry.date)}"></td>
                     <td><select id="edit_cat_${entry.id}" class="inline-input">${catOptions}</select></td>
                     <td style="text-align:left;">
-                        <input type="text" id="edit_detail_${entry.id}" class="inline-input" value="${entry.detail}">
+                        <input type="text" id="edit_detail_${entry.id}" class="inline-input" value="${escapeHTML(entry.detail)}">
                         ${dateEditHtml}
                     </td>
                     <td><input type="number" id="edit_amt_${entry.id}" class="inline-input" value="${entry.amount}"></td>
@@ -1101,9 +1414,9 @@
                 const syncBadge = entry.linkedTrade ? '<span class="sync-badge">📈 주식연동</span>' : '';
                 
                 tr.innerHTML = `
-                    <td>${entry.date.slice(5)}</td>
-                    <td>${entry.category}</td>
-                    <td style="text-align:left;">${entry.detail} ${dateBadge} ${syncBadge}</td>
+                    <td>${escapeHTML(entry.date.slice(5))}</td>
+                    <td>${escapeHTML(entry.category)}</td>
+                    <td style="text-align:left;">${escapeHTML(entry.detail)} ${dateBadge} ${syncBadge}</td>
                     <td style="font-weight:bold;">${entry.amount.toLocaleString()}</td>
                     <td class="action-btns">
                         ${!entry.linkedTrade ? `<button class="edit-btn" onclick="startInlineEdit(${entry.id})">수정</button>` : ''}
@@ -1239,7 +1552,7 @@
         if (increased.length > 0) {
             box.className = "comment-box warn";
             let html = `🚨 <b>지출 경고!</b> 지난달보다 지출이 늘어난 항목이 있습니다.<br><div style="text-align: left; margin-top: 10px;">`;
-            increased.forEach(item => html += `<div>• <b>${item.category}</b> : <span class="txt-expense">+${item.diff.toLocaleString()}원</span></div>`);
+            increased.forEach(item => html += `<div>• <b>${escapeHTML(item.category)}</b> : <span class="txt-expense">+${item.diff.toLocaleString()}원</span></div>`);
             box.innerHTML = html + `</div>`;
         } else {
             box.className = "comment-box";
@@ -1252,6 +1565,7 @@
     function toggleCalculator() {
         const panel = document.getElementById('calcPanel');
         panel.style.display = panel.style.display === 'block' ? 'none' : 'block';
+        document.querySelector('.floating-calc-btn').setAttribute('aria-expanded', String(panel.style.display === 'block'));
     }
 
     function calcInput(val) {
@@ -1259,9 +1573,10 @@
         if (val === 'C') {
             calcValue = ''; display.value = '0';
         } else if (val === '=') {
-            try { calcValue = eval(calcValue).toString(); display.value = calcValue; } 
+            try { calcValue = evaluateExpression(calcValue).toString(); display.value = calcValue; } 
             catch(e) { display.value = 'Error'; calcValue = ''; }
         } else {
+            if (calcValue.length >= 100) return;
             if (calcValue === '0' && val !== '.') calcValue = '';
             calcValue += val;
             display.value = calcValue;
@@ -1269,9 +1584,55 @@
     }
 
     /* ==== 백업/복구 기능 ==== */
+    function evaluateExpression(expression) {
+        const source = String(expression).replace(/\s/g, '');
+        const tokens = source.match(/\d+(?:\.\d+)?|[()+\-*\/]/g);
+        if (!tokens || tokens.join('') !== source) throw new Error('잘못된 수식');
+        let position = 0;
+        const parseExpression = () => {
+            let value = parseTerm();
+            while (tokens[position] === '+' || tokens[position] === '-') {
+                const operator = tokens[position++];
+                const right = parseTerm();
+                value = operator === '+' ? value + right : value - right;
+            }
+            return value;
+        };
+        const parseTerm = () => {
+            let value = parseFactor();
+            while (tokens[position] === '*' || tokens[position] === '/') {
+                const operator = tokens[position++];
+                const right = parseFactor();
+                if (operator === '/' && right === 0) throw new Error('0으로 나눌 수 없음');
+                value = operator === '*' ? value * right : value / right;
+            }
+            return value;
+        };
+        const parseFactor = () => {
+            const token = tokens[position++];
+            if (token === '+' || token === '-') {
+                const value = parseFactor();
+                return token === '-' ? -value : value;
+            }
+            if (token === '(') {
+                const value = parseExpression();
+                if (tokens[position++] !== ')') throw new Error('괄호 오류');
+                return value;
+            }
+            const value = Number(token);
+            if (!Number.isFinite(value)) throw new Error('숫자 오류');
+            return value;
+        };
+        const result = parseExpression();
+        if (position !== tokens.length || !Number.isFinite(result)) throw new Error('계산 오류');
+        return result;
+    }
+
     function exportData() {
         const blob = new Blob([JSON.stringify({ categories, entries, fixedEntries, trades }, null, 2)], { type: 'application/json' });
-        const a = document.createElement('a'); a.href = URL.createObjectURL(blob); a.download = `가계부백업_${new Date().toISOString().slice(0, 10)}.json`; a.click();
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a'); a.href = url; a.download = `가계부백업_${localISODate()}.json`; a.click();
+        setTimeout(() => URL.revokeObjectURL(url), 0);
     }
     function importData(event) {
         const file = event.target.files[0]; if (!file) return;
@@ -1279,7 +1640,7 @@
         reader.onload = function(e) {
             try {
                 const data = JSON.parse(e.target.result);
-                if (data.categories && data.entries) { 
+                if (isValidBackup(data)) { 
                     categories = data.categories; 
                     entries = data.entries; 
                     fixedEntries = data.fixedEntries || []; 
@@ -1295,8 +1656,11 @@
                     
                     saveData(); 
                     alert("복구 완료!"); 
+                } else {
+                    alert("올바른 가계부 백업 파일이 아닙니다.");
                 }
             } catch (err) { alert("파일 오류"); }
+            finally { event.target.value = ''; }
         };
         reader.readAsText(file);
     }
